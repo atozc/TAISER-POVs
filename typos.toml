@@ -1,0 +1,17 @@
+#Command to run: typos -w --locale en-us
+
+[default.extend-identifiers]
+Behaviour = "Behaviour"
+Behaviours = "Behaviours"
+ret = "ret"
+prev = "prev"
+
+[default.extend-words]
+Behaviour = "Behaviour"
+Behaviours = "Behaviours"
+ret = "ret"
+prev = "prev"
+
+[files]
+# Ignore meta files
+extend-exclude = ["*.meta", "Assets/Thirdparty/*"]
