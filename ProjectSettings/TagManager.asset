@@ -14,11 +14,12 @@ TagManager:
   - Grid
   - SuggestedFirewall
   - LobbyScreenWindow
+  - CinemachineTarget
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - MiniMap
   - Water
   - UI
   - Malicious
