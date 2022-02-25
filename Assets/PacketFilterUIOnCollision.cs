@@ -17,22 +17,20 @@ public class PacketFilterUIOnCollision : MonoBehaviour
     }
 
     public TDestination destination;
-    
 
-    //Detect collisions between the GameObjects with Colliders attached
     void OnCollisionEnter(Collision collision)
     {
-        //Check for a match with the specified name on any GameObject that collides with your GameObject
-        if (collision.gameObject.name == "Door")
-        {
-            //If the GameObject's name matches
-            Debug.Log("Player collided with door");
+        //Detect Collsions
+        //Debug.Log(collision.gameObject.name + " Collided with: " + transform.gameObject.name + " with parent: " + collision.transform.parent.name);
 
+        //Bring up UI
+        if (collision.gameObject.name == "PlayerArmature" && transform.gameObject.name == "MaliciousCube")
+        {
             NewGameMgr.inst.OnAttackableDestinationClicked(destination);
         }
         else
         {
-            Debug.Log("Player did not collide with door");
+            //Debug.Log("Ash did not collide with a destination building");
         }
     }
 }
