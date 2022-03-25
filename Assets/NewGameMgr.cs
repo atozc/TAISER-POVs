@@ -23,6 +23,7 @@ public class LightWeightPacket
     {
         return "" + size.ToString() + ", " + color.ToString() + ", " + shape.ToString();
     }
+
     public void copy(LightWeightPacket other)
     {
         color = other.color;
@@ -73,11 +74,12 @@ public class NewGameMgr : MonoBehaviour
 
     void Update()
     {
-        if(State == GameState.InWave)
+        UpdateScore();
+        if (State == GameState.InWave)
             BlackhatAI.inst.DoWave();
 
-        if(State == GameState.FlushingSourcesToEndWave)
-            if(Sources[0].gameObject.GetComponentsInChildren<TPacket>().Length <= 0)
+        if (State == GameState.FlushingSourcesToEndWave)
+            if (Sources[0].gameObject.GetComponentsInChildren<TPacket>().Length <= 0)
                 EndWave();
 
     }
@@ -101,10 +103,13 @@ public class NewGameMgr : MonoBehaviour
     void CountdownLabeller()
     {
         //Debug.Log("Calling invoke repeating: timesecs: " + timerSecs);
-        if(timerSecs <= 0) {
+        if (timerSecs <= 0)
+        {
             CancelInvoke("CountdownLabeller");
             State = GameState.InWave;
-        } else {
+        }
+        else
+        {
             NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Countdown);
             timerSecs -= 1;
             CountdownLabel.text = timerSecs.ToString("0");
@@ -112,44 +117,52 @@ public class NewGameMgr : MonoBehaviour
     }
 
     public Text VictoryOrDefeatText;
-
+    public Text AnotherWaveAwaitsMessageText;
     public void EndWave()
     {
         Debug.Log("Ending Wave: " + currentWaveNumber);
         State = GameState.WaveEnd;
         SetWaveEndScores();
-        if(BlackhatAI.inst.wscore > BlackhatAI.inst.bscore) {
+        if (WhitehatScore > BlackhatScore)
+        {
             VictoryOrDefeatText.text = "Victory!";
-            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Winning);
-        } else {
-            VictoryOrDefeatText.text = "Defeat!";
-            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Losing);
+            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Winning, 2.0f);
         }
-        Invoke("WaitToStartNextWave", 10f);
+        else
+        {
+            VictoryOrDefeatText.text = "Defeat!";
+            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Losing, 8.0f);
+        }
+        currentWaveNumber += 1;
+        if (currentWaveNumber >= maxWaves)
+            AnotherWaveAwaitsMessageText.text = "Wait... To Wave Goodbye!";
+        else
+            AnotherWaveAwaitsMessageText.text = "Wait... Get Ready for Wave " + (1 + currentWaveNumber).ToString("0")
+                + " of " + maxWaves.ToString("0");
+
+        Invoke("WaitToStartNextWave", 8f);
     }
 
     public RectTransform blackhatBarPanel;
-    public Vector3 blackhatScoreScaler = Vector3.one;
+    public Vector3 waveEndBlackhatScoreScaler = Vector3.one;
     public RectTransform whiteHatBarPanel;
-    public Vector3 whitehatScoreScaler = Vector3.one;
+    public Vector3 waveEndWhitehatScoreScaler = Vector3.one;
     public void SetWaveEndScores()
     {
-        blackhatScoreScaler.y = BlackhatAI.inst.bscore;
-        blackhatBarPanel.localScale = blackhatScoreScaler;
-        whitehatScoreScaler.y = BlackhatAI.inst.wscore;
-        whiteHatBarPanel.localScale = whitehatScoreScaler;
+        SetScores(BlackhatScore, WhitehatScore);
+        waveEndBlackhatScoreScaler.y = BlackhatScore;
+        blackhatBarPanel.localScale = waveEndBlackhatScoreScaler;
+        waveEndWhitehatScoreScaler.y = WhitehatScore;
+        whiteHatBarPanel.localScale = waveEndWhitehatScoreScaler;
     }
 
     void WaitToStartNextWave()
     {
-        currentWaveNumber += 1;
         Debug.Log("Waiting to start next wave: " + currentWaveNumber);
-        if(currentWaveNumber < maxWaves)
+        if (currentWaveNumber < maxWaves)
             StartWave();
         else
             State = GameState.Menu;
-
-
     }
 
 
@@ -158,20 +171,24 @@ public class NewGameMgr : MonoBehaviour
     public List<GameObject> ToHide = new List<GameObject>();
     public void HidePrototypes()
     {
-        foreach(GameObject go in ToHide) {
-            foreach(MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>()) {
-                if(!mr.gameObject.name.Contains("CubePath"))
+        foreach (GameObject go in ToHide)
+        {
+            foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>())
+            {
+                if (!mr.gameObject.name.Contains("CubePath"))
                     mr.enabled = false;
             }
         }
     }
-    
+
 
     public void PrintSourceD(Dictionary<TSource, List<TPath>> spd)
     {
-        foreach(TSource key in spd.Keys) {
+        foreach (TSource key in spd.Keys)
+        {
             List<TPath> paths = spd[key];
-            foreach(TPath path in paths) {
+            foreach (TPath path in paths)
+            {
                 Debug.Log("Path: source: " + path.source.myId + ", dest: " + path.destination.myId
                     + ", wpCount: " + path.waypoints.Count);
             }
@@ -233,13 +250,15 @@ public class NewGameMgr : MonoBehaviour
     {
         Sources.Clear();
         int index = 0;
-        foreach(TSource ts in SourcesRoot.GetComponentsInChildren<TSource>()) {
+        foreach (TSource ts in SourcesRoot.GetComponentsInChildren<TSource>())
+        {
             Sources.Add(ts);
             ts.myId = index++;
         }
         Destinations.Clear();
         index = 0;
-        foreach(TDestination td in DestinationsRoot.GetComponentsInChildren<TDestination>()) {
+        foreach (TDestination td in DestinationsRoot.GetComponentsInChildren<TDestination>())
+        {
             Destinations.Add(td);
             td.myId = index++;
         }
@@ -253,8 +272,10 @@ public class NewGameMgr : MonoBehaviour
     {
         SourcePathDebugList.Clear();//Lists show in editor for debugging
         SourcePathDictionary.Clear();
-        foreach(TSource ts in Sources) {
-            if(IsSourceInPaths(ts)) { 
+        foreach (TSource ts in Sources)
+        {
+            if (IsSourceInPaths(ts))
+            {
                 SourcePathDebugMap spl = new SourcePathDebugMap();
                 spl.source = ts;
                 spl.paths = new List<TPath>();
@@ -263,7 +284,8 @@ public class NewGameMgr : MonoBehaviour
                 SourcePathDictionary.Add(ts, new List<TPath>());
             }
         }
-        foreach(TPath tp in Paths) {
+        foreach (TPath tp in Paths)
+        {
             SourcePathDebugList.Find(s => s.source.myId == tp.source.myId).paths.Add(tp);
             SourcePathDictionary[tp.source].Add(tp);
         }
@@ -272,8 +294,9 @@ public class NewGameMgr : MonoBehaviour
 
     public bool IsSourceInPaths(TSource ts)
     {
-        foreach(TPath path in Paths) {
-            if(path.source.myId == ts.myId)
+        foreach (TPath path in Paths)
+        {
+            if (path.source.myId == ts.myId)
                 return true;
         }
         return false;
@@ -330,14 +353,15 @@ public class NewGameMgr : MonoBehaviour
     public void OnPacketClicked(LightWeightPacket packet)
     {
         DisplayPacketInformation(packet); // expand on this
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.PacketInspect.ToString(), packet.ToString());
     }
 
     public void DisplayPacketInformation(LightWeightPacket packet)
     {
         RuleTextList[0].text = packet.size.ToString();
-        RuleTextList[0].fontSize = FontSizes[(int) packet.size];
+        RuleTextList[0].fontSize = FontSizes[(int)packet.size];
         RuleTextList[1].text = packet.color.ToString();
-        RuleTextList[1].color = TextColors[(int) packet.color];
+        RuleTextList[1].color = TextColors[(int)packet.color];
         RuleTextList[2].text = packet.shape.ToString();
     }
     public List<int> FontSizes = new List<int>();
@@ -349,7 +373,8 @@ public class NewGameMgr : MonoBehaviour
     public void SetupButtonArray()
     {
         RuleTextList.Clear();
-        foreach(Text t in RuleTextListRoot.GetComponentsInChildren<Text>()) {
+        foreach (Text t in RuleTextListRoot.GetComponentsInChildren<Text>())
+        {
             RuleTextList.Add(t);
         }
     }
@@ -364,16 +389,59 @@ public class NewGameMgr : MonoBehaviour
         PacketButtonMgr.inst.OnAttackableDestinationClicked(destination); // multiple things are happening
         RuleSpecButtonMgr.inst.CurrentDestination = destination;
         FilterRuleSpecTitle.text = destination.gameName;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.MaliciousBuilding.ToString(), destination.name);
         State = GameState.PacketExamining;
     }
 
+
+    //-------------------------------------------------------------------------------------
     public Text whitehatScoreText;
     public Text blackhatScoreText;
+    public RectTransform WhitehatWatchingScorePanel;
+    public RectTransform BlackhatWatchingScorePanel;
+    public float minScaley = 0.0f;
     public void SetScores(float blackhatScore, float whitehatScore)
     {
-        whitehatScoreText.text = whitehatScore.ToString("0.0");
-        blackhatScoreText.text = blackhatScore.ToString("0.0");
+        //whitehatScoreText.text = whitehatScore.ToString("0.0");
+        //blackhatScoreText.text = blackhatScore.ToString("0.0");
+        SetBars(BlackhatWatchingScorePanel, blackhatScore, WhitehatWatchingScorePanel, whitehatScore);
     }
+    public Vector3 inWaveWhitehatScaler = Vector3.one;
+    public Vector3 inWaveBlackhatScaler = Vector3.one;
+    public void SetBars(RectTransform blackhatBarPanel, float blackhatScore,
+        RectTransform whitehatBarPanel, float whitehatScore)
+    {
+        inWaveWhitehatScaler.x = whitehatScore + minScaley;
+        whitehatBarPanel.localScale = inWaveWhitehatScaler;
+        inWaveBlackhatScaler.x = blackhatScore + minScaley;
+        blackhatBarPanel.localScale = inWaveBlackhatScaler;
+    }
+
+    public float WhitehatScore = 0;
+    public float BlackhatScore = 0;
+
+    public int totalMaliciousCount;
+    public int totalMaliciousFilteredCount; //over all destinations
+    public int totalMaliciousUnFilteredCount; //over all destinations
+
+    public void UpdateScore()
+    {
+        totalMaliciousFilteredCount = 0;
+        totalMaliciousCount = 0;
+        totalMaliciousUnFilteredCount = 0;
+        foreach (TDestination destination in Destinations)
+        {
+            totalMaliciousFilteredCount += destination.maliciousFilteredCount;
+            totalMaliciousUnFilteredCount += destination.maliciousUnfilteredCount; //is also malicious - filtered
+            totalMaliciousCount += destination.maliciousCount;
+        }
+
+        WhitehatScore = totalMaliciousFilteredCount / (totalMaliciousCount + 1f);
+        BlackhatScore = totalMaliciousUnFilteredCount / (totalMaliciousCount + 1f);
+        SetScores(BlackhatScore, WhitehatScore);
+    }
+
+
 
     //-------------------------------------------------------------------------------------
     public void OnMenuBackButton()
@@ -387,7 +455,14 @@ public class NewGameMgr : MonoBehaviour
     }
     public void QuitRoom()
     {
-        Application.Quit();
+        InstrumentMgr.inst.WriteSession();
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+    }
+
+    public void OnMenuButtonClicked()
+    {
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.Menu.ToString());
+        State = GameState.Menu;
     }
 
     public void OnReady()
@@ -407,7 +482,7 @@ public class NewGameMgr : MonoBehaviour
 
 
     //----------------------------------------------------------------------------------------------------
-    //
+    //Deprecated. Only use to see how you might set up a test /Testing
     //----------------------------------------------------------------------------------------------------
     int spawnCount = 0;
     public TSource source;
@@ -417,7 +492,8 @@ public class NewGameMgr : MonoBehaviour
     /// </summary>
     public void InitTest()
     {
-        if(Time.frameCount % 50 == 0 && spawnCount < 20) {
+        if (Time.frameCount % 50 == 0 && spawnCount < 20)
+        {
             TPacket tp = NewEntityMgr.inst.CreatePacket(PacketShape.Cube);
             tp.transform.parent = source.transform;
             tp.InitPath(Paths[0]);

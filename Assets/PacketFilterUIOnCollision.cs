@@ -23,9 +23,10 @@ public class PacketFilterUIOnCollision : MonoBehaviour
         //Detect Collsions
         //Debug.Log(collision.gameObject.name + " Collided with: " + transform.gameObject.name + " with parent: " + collision.transform.parent.name);
 
-        //Bring up UI
+        //Display Pack Filter UI on player collision
         if (collision.gameObject.name == "PlayerArmature" && transform.gameObject.name == "MaliciousCube")
         {
+            // Display UI
             NewGameMgr.inst.OnAttackableDestinationClicked(destination);
         }
         else

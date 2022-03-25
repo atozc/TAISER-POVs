@@ -13,15 +13,15 @@ public class RuleSpecButtonMgr : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
-    
+
     [System.Serializable]
     public class ButtonList
     {
@@ -37,14 +37,17 @@ public class RuleSpecButtonMgr : MonoBehaviour
     public void SetupButtons()
     {
         RuleButtons2d.Clear();
-        for(int i = 0; i < nrows; i++) {
+        for (int i = 0; i < nrows; i++)
+        {
             RuleButtons2d.Add(new ButtonList());
         }
         int row = 0;
         int index = 0;
-        foreach(Button b in ButtonsRoot.GetComponentsInChildren<Button>()) {
+        foreach (Button b in ButtonsRoot.GetComponentsInChildren<Button>())
+        {
             string bt = b.GetComponentInChildren<Text>().text.ToLower();
-            if(bt != "Size".ToLower() && bt != "Color".ToLower() && bt != "Shape".ToLower()) {
+            if (bt != "Size".ToLower() && bt != "Color".ToLower() && bt != "Shape".ToLower())
+            {
                 row = index / nrows;
                 RuleButtons2d[row].buttons.Add(b);
                 index++;
@@ -56,21 +59,20 @@ public class RuleSpecButtonMgr : MonoBehaviour
     public LightWeightPacket RuleSpecFromPlayer = new LightWeightPacket();
     public void OnSizeClick(int size)
     {
-        RuleSpecFromPlayer.size = (PacketSize) size;
+        RuleSpecFromPlayer.size = (PacketSize)size;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.RuleSpec.ToString(), RuleSpecFromPlayer.size.ToString());
     }
     public void OnColorClick(int color)
     {
-        RuleSpecFromPlayer.color = (PacketColor) color;
+        RuleSpecFromPlayer.color = (PacketColor)color;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.RuleSpec.ToString(), RuleSpecFromPlayer.color.ToString());
     }
     public void OnShapeClick(int shape)
     {
-        RuleSpecFromPlayer.shape = (PacketShape) shape;
+        RuleSpecFromPlayer.shape = (PacketShape)shape;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.RuleSpec.ToString(), RuleSpecFromPlayer.shape.ToString());
     }
 
-    //public void DepApplyUserRule(LightWeightPacket lwp)
-    //{
-    //    CurrentDestination.FilterOnRule(lwp);
-    //}
 
     /// <summary>
     /// Called from TaiserInGameStartPanel from SetFirewall button
@@ -78,8 +80,19 @@ public class RuleSpecButtonMgr : MonoBehaviour
     public void ApplyCurrentUserRule()
     {
         CurrentDestination.FilterOnRule(RuleSpecFromPlayer);
-        //CurrentDestination.ResetButton();
-        CurrentDestination.ResetMaliciousCube(RuleSpecFromPlayer);
+
+        if (RuleSpecFromPlayer.isEqual(BlackhatAI.inst.maliciousRule))
+        {
+            InstrumentMgr.inst.AddRecord(TaiserEventTypes.FirewallSetCorrect.ToString());
+            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.GoodFilterRule);
+        }
+        else
+        {
+            InstrumentMgr.inst.AddRecord(TaiserEventTypes.FirewallSetInCorrect.ToString());
+            NewAudioMgr.inst.source.PlayOneShot(NewAudioMgr.inst.BadFilterRule);
+        }
+
+
         NewGameMgr.inst.State = NewGameMgr.GameState.InWave;
     }
 

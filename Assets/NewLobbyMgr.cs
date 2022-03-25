@@ -24,6 +24,7 @@ public class NewLobbyMgr : MonoBehaviour
     void Start()
     {
         State = LobbyState.StartOrQuit;
+        SetPriorStateMap();
     }
 
     // Update is called once per frame
@@ -71,12 +72,26 @@ public class NewLobbyMgr : MonoBehaviour
         Application.Quit();
     }
 
+    public void OnBackButton()
+    {
+        State = PriorStateMap[State];
+    }
+    public Dictionary<LobbyState, LobbyState> PriorStateMap = new Dictionary<LobbyState, LobbyState>();
+    public void SetPriorStateMap()
+    {
+        PriorStateMap.Add(LobbyState.StartOrQuit, LobbyState.StartOrQuit);
+        PriorStateMap.Add(LobbyState.EnterAlias, LobbyState.StartOrQuit);
+        PriorStateMap.Add(LobbyState.CreateOrJoin, LobbyState.EnterAlias);
+        PriorStateMap.Add(LobbyState.WaitingForPlayers, LobbyState.CreateOrJoin);
+    }
+
+
     public InputField AliasInputFieldText;
     public Text PlayerNameText;
     public Text GameNamePlaceholderText;
 
     public string GameName;
-    public string PlayerName;
+    public static string PlayerName;
 
     public void OnJoinButton()
     {
@@ -95,7 +110,7 @@ public class NewLobbyMgr : MonoBehaviour
 
 
         UpdateRoomList();
-        
+
         State = LobbyState.CreateOrJoin;
         //...
     }
@@ -143,13 +158,15 @@ public class NewLobbyMgr : MonoBehaviour
     {
         CachedRoomNameList.Clear();
         int i = 0;
-        foreach (RoomInfo ri in CachedRoomList) {
-            if(ri.Name != GameName && i < 4) {//Can only do 4 buttons/rooms/games
+        foreach (RoomInfo ri in CachedRoomList)
+        {
+            if (ri.Name != GameName && i < 4)
+            {//Can only do 4 buttons/rooms/games
                 RoomButtonsList[i].interactable = true;
                 RoomButtonsList[i].GetComponentInChildren<Text>().text = ri.Name;
                 i++;
                 CachedRoomNameList.Add(ri.Name);
-               
+
             }
         }
     }
@@ -159,10 +176,11 @@ public class NewLobbyMgr : MonoBehaviour
     public void FindConnectGameButtons()
     {
         RoomButtonsList.Clear();
-        foreach(Button b in GameButtonsPanel.GetComponentsInChildren<Button>()) {
+        foreach (Button b in GameButtonsPanel.GetComponentsInChildren<Button>())
+        {
             RoomButtonsList.Add(b);
             b.interactable = false;
-            
+
         }
     }
 
@@ -172,8 +190,9 @@ public class NewLobbyMgr : MonoBehaviour
     public List<string> dropdownValues; // Then set this 
     // and then finally run Menu item below to initialize waiting for players labels and dropdowns
     // Just do this once, beats using editor to connect them all up
-    [ContextMenu("FindConnectInitLabelDropdowns")] 
-    public void FindConnectInitLabelDropdowns (){
+    [ContextMenu("FindConnectInitLabelDropdowns")]
+    public void FindConnectInitLabelDropdowns()
+    {
         ConnectTeam(Team1Panel, Team1PlayerNamesList, Team1PlayerRolesList);
         ConnectTeam(Team2Panel, Team2PlayerNamesList, Team2PlayerRolesList);
     }
@@ -189,14 +208,17 @@ public class NewLobbyMgr : MonoBehaviour
     public void ConnectTeam(RectTransform panel, List<Text> players, List<Dropdown> teamDropdowns)
     {
         players.Clear();
-        foreach(Text t in panel.GetComponentsInChildren<Text>()) {
-            if(t.gameObject.name == "TaiserText") {
+        foreach (Text t in panel.GetComponentsInChildren<Text>())
+        {
+            if (t.gameObject.name == "TaiserText")
+            {
                 t.text = "";
                 players.Add(t);
             }
         }
         teamDropdowns.Clear();
-        foreach(Dropdown d in panel.GetComponentsInChildren<Dropdown>()) {
+        foreach (Dropdown d in panel.GetComponentsInChildren<Dropdown>())
+        {
             d.ClearOptions();
             d.AddOptions(dropdownValues);
             teamDropdowns.Add(d);
@@ -221,7 +243,7 @@ public class NewLobbyMgr : MonoBehaviour
         SetNetworkPlayerRole(PlayerRole.Whitehat);
         WaitForPlayers(GameName);
 
-        if(isAI)
+        if (isAI)
             Invoke("MakeAIPlayerAndActivatePlayButton", 1);
     }
 
@@ -243,9 +265,11 @@ public class NewLobbyMgr : MonoBehaviour
         object myRoleObject;
         bool status = p.CustomProperties.TryGetValue("R", out myRoleObject);
         PlayerRole role = PlayerRole.None;
-        if(status) {
+        if (status)
+        {
             string myRoleString = myRoleObject.ToString();
-            switch (myRoleString) {
+            switch (myRoleString)
+            {
                 case "Blackhat":
                     role = PlayerRole.Blackhat;
                     break;
@@ -274,18 +298,21 @@ public class NewLobbyMgr : MonoBehaviour
         Team1PlayerRolesList[index1].interactable = true;
         SetPlayerInfoDisplay(PlayerName, Team1PlayerNamesList, myRole, Team1PlayerRolesList, index1++);
 
-        foreach(Player p in PhotonNetwork.CurrentRoom.Players.Values) {
-            if(p.NickName != PhotonNetwork.LocalPlayer.NickName) {
+        foreach (Player p in PhotonNetwork.CurrentRoom.Players.Values)
+        {
+            if (p.NickName != PhotonNetwork.LocalPlayer.NickName)
+            {
                 PlayerRole pRole = GetRole(p);
-                if(pRole == myRole)
+                if (pRole == myRole)
                     SetPlayerInfoDisplay(p.NickName, Team1PlayerNamesList, pRole, Team1PlayerRolesList, index1++);
                 else
                     SetPlayerInfoDisplay(p.NickName, Team2PlayerNamesList, pRole, Team2PlayerRolesList, index2++);
-                    
+
             }
         }
-        foreach(AIPlayer aip in AIPlayers) {
-            if(aip.role == myRole)
+        foreach (AIPlayer aip in AIPlayers)
+        {
+            if (aip.role == myRole)
                 SetPlayerInfoDisplay(aip.name, Team1PlayerNamesList, aip.role, Team1PlayerRolesList, index1++);
             else
                 SetPlayerInfoDisplay(aip.name, Team2PlayerNamesList, aip.role, Team2PlayerRolesList, index2++);
@@ -298,7 +325,7 @@ public class NewLobbyMgr : MonoBehaviour
         names[i].text = name;
         RoleDropdownHandler rdh = roles[i].GetComponent<RoleDropdownHandler>();
         rdh.playerName = name;
-        rdh.SetValueWithoutTrigger((int) role);
+        rdh.SetValueWithoutTrigger((int)role);
     }
 
     public void OnValueChangedInRoleDropdown(string playerName, PlayerRole role, Dropdown dropdown, int index)
@@ -312,20 +339,24 @@ public class NewLobbyMgr : MonoBehaviour
     //----------------------------------------------------------------------
     public void UninteractDropdowns()
     {
-        foreach(Dropdown dropdown in Team2PlayerRolesList) {
+        foreach (Dropdown dropdown in Team2PlayerRolesList)
+        {
             dropdown.interactable = false;
         }
-        foreach(Dropdown dropdown in Team1PlayerRolesList) {
+        foreach (Dropdown dropdown in Team1PlayerRolesList)
+        {
             dropdown.interactable = false;
         }
     }
 
     public void ResetPlayerNamesList()
     {
-        foreach(Text txt in Team1PlayerNamesList) {
+        foreach (Text txt in Team1PlayerNamesList)
+        {
             txt.text = "";
         }
-        foreach(Text txt in Team2PlayerNamesList) {
+        foreach (Text txt in Team2PlayerNamesList)
+        {
             txt.text = "";
         }
     }
@@ -335,13 +366,13 @@ public class NewLobbyMgr : MonoBehaviour
     public void ValidatePlayButton()
     {
         int count;
-        if(isAI)
+        if (isAI)
             count = PhotonNetwork.CurrentRoom.PlayerCount + 1;
         else
             count = PhotonNetwork.CurrentRoom.PlayerCount;
         Debug.Log("ValidatePlayButton: NPlayers: " + count);
 
-        if(count >= MinNumberOfPlayers && isRoomCreator)
+        if (count >= MinNumberOfPlayers && isRoomCreator)
             PlayButton.interactable = true;
     }
 
@@ -350,6 +381,7 @@ public class NewLobbyMgr : MonoBehaviour
     {
         State = LobbyState.Play;
         //UnityEngine.SceneManagement.SceneManager.LoadScene(1); //GraphPrototype
+        InstrumentMgr.isDebug = false;
         PhotonNetwork.LoadLevel(1);
         //...
     }
