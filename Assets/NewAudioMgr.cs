@@ -20,8 +20,13 @@ public class NewAudioMgr : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (UnityEngine.InputSystem.Keyboard.current.endKey.wasReleasedThisFrame)
+        {
+            source.PlayOneShot(testClip, testScale);
+        }
     }
+    public float testScale;
+    public AudioClip testClip;
 
     public AudioSource source;
     public AudioClip maliciousUnfiltered;
@@ -35,16 +40,17 @@ public class NewAudioMgr : MonoBehaviour
     public AudioClip Losing;
 
     public AudioSource ambient;
-    public AudioClip ambientClip;
+    //public AudioClip ambientClip;
 
-    public void PlayOneShot(AudioClip clip)
+    public void PlayOneShot(AudioClip clip, float vScale = 1f)
     {
-        source.PlayOneShot(clip);
+        source.PlayOneShot(clip, vScale);
     }
-    
+
     void PlayAmbient()
     {
-        ambient.PlayDelayed(10f);
+        //ambient.PlayDelayed(10f);
+        ambient.Play();
     }
 
 }
