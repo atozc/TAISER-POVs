@@ -1,209 +1,210 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using Photon.Pun;
+using UnityEngine.Networking;
 
-public class InstrumentationManager : Core.Utilities.SingletonPun<InstrumentationManager>
+using System.IO;
+using System.Text;
+using System.Xml;
+
+//----------------------------------------------------
+//Could use csv helper, but seems too much for our 
+//simple needs and adds unneeded dependency
+//https://joshclose.github.io/CsvHelper/
+//----------------------------------------------------
+
+[System.Serializable]
+public class TaiserSession
 {
-    [System.Serializable]
-    public struct InstrumentationEvent
+    public string name;
+    public Role role;
+    public System.DateTime dayAndTime;
+    public float whitehatScore;
+    public float blackhatScore;
+    public List<TaiserRecord> records;
+}
+
+[System.Serializable]
+public class TaiserRecord
+{
+    /// <summary>
+    /// From start of game
+    /// </summary>
+    public float secondsFromStart;
+    public string eventName; //Is the .ToString() of TaiserEventTypes below
+    public List<string> eventModifiers; // Only one event type has event modifiers right now
+}
+
+[System.Serializable]
+public enum TaiserEventTypes
+{
+    RuleSpec = 0, //which button?
+    Filter,       //which rule?
+    MaliciousBuilding,  //which building?
+    Menu,
+    FirewallSetCorrect,
+    FirewallSetInCorrect,
+    PacketInspect,      //Packet info
+    StartWave,
+    EndWave,
+    SetNewMaliciousRule, // set by blackhat
+}
+
+public class InstrumentMgr : MonoBehaviour
+{
+    public static InstrumentMgr inst;
+    public void Awake()
     {
-        public int playerID;
-        public float timestamp;
-        public string source;
-        public string eventType;
-        public string _old, _new;
+        inst = this;
     }
 
-    [SerializeField]
-    List<InstrumentationEvent> eventLog = new List<InstrumentationEvent>();
-
-    void OnEnable()
+    // Start is called before the first frame update
+    void Start()
     {
-        GameManager.waveStartEvent += OnWaveStart;
-        GameManager.waveEndEvent += OnWaveEnd;
-        GameManager.gameEndEvent += OnApplicationQuit;
-        ScoreManager.scoreEvent += OnScoreEvent;
-        BlackHatBaseManager.updateStartingPointRuleEvent += OnUpdatedStartingPointRuleEvent;
-        BlackHatBaseManager.proposeStartingPointRuleEvent += OnProposedStartingPointRuleEvent;
-        BlackHatBaseManager.updateStartingPointProbabilityEvent += OnUpdatedStartingPointProbabilityEvent;
-        BlackHatBaseManager.proposeStartingPointProbabilityEvent += OnProposedStartingPointProbabilityEvent;
-        BlackHatBaseManager.updateDestinationLikelihoodEvent += OnUpdatedDestinationLikelihoodEvent;
-        BlackHatBaseManager.proposeDestinationLikelihoodEvent += OnProposedDestinationLikelihoodEvent;
-        WhiteHatBaseManager.moveFirewallEvent += OnMovedFirewallEvent;
-        WhiteHatBaseManager.firewallUpdateEvent += OnFirewallUpdatedEvent;
-        WhiteHatBaseManager.firewallProposeEvent += OnFirewallProposedEvent;
-        WhiteHatBaseManager.honeypotUpdateEvent += OnHoneypotUpdatedEvent;
-        WhiteHatBaseManager.honeypotProposeEvent += OnHoneypotProposedEvent;
-        WhiteHatBaseManager.suggestedFirewallEvent += OnSuggestedFirewallEvent;
-    }
-    void OnDisable()
-    {
-        GameManager.waveStartEvent -= OnWaveStart;
-        GameManager.waveEndEvent -= OnWaveEnd;
-        GameManager.gameEndEvent -= OnApplicationQuit;
-        ScoreManager.scoreEvent -= OnScoreEvent;
-        BlackHatBaseManager.updateStartingPointRuleEvent -= OnUpdatedStartingPointRuleEvent;
-        BlackHatBaseManager.proposeStartingPointRuleEvent -= OnProposedStartingPointRuleEvent;
-        BlackHatBaseManager.updateStartingPointProbabilityEvent -= OnUpdatedStartingPointProbabilityEvent;
-        BlackHatBaseManager.proposeStartingPointProbabilityEvent -= OnProposedStartingPointProbabilityEvent;
-        BlackHatBaseManager.updateDestinationLikelihoodEvent -= OnUpdatedDestinationLikelihoodEvent;
-        BlackHatBaseManager.proposeDestinationLikelihoodEvent -= OnProposedDestinationLikelihoodEvent;
-        WhiteHatBaseManager.moveFirewallEvent -= OnMovedFirewallEvent;
-        WhiteHatBaseManager.firewallUpdateEvent -= OnFirewallUpdatedEvent;
-        WhiteHatBaseManager.firewallProposeEvent -= OnFirewallProposedEvent;
-        WhiteHatBaseManager.honeypotUpdateEvent -= OnHoneypotUpdatedEvent;
-        WhiteHatBaseManager.honeypotProposeEvent -= OnHoneypotProposedEvent;
-        WhiteHatBaseManager.suggestedFirewallEvent -= OnSuggestedFirewallEvent;
+        CreateOrFindTaiserFolder();
     }
 
-    public void SaveToFile(string filePath = "<default>")
+    // Update is called once per frame
+    void Update()
     {
-        // If the file path is default, update it to the persistent path, with the player's name and the current date
-        if (filePath == "<default>") filePath = Application.persistentDataPath + "/"
-             + Networking.Player.localPlayer.remoteNickname.Replace("#", "_") + "." + System.DateTime.Now.ToString("MM_dd_yyyy.HH_mm") + ".csv";
-
-        // Open the file (or create it)
-        Debug.Log("Writing Instrumentation Log to: " + filePath);
-        FileStream file = File.OpenWrite(filePath);
-
-        // Write the CSV header
-        byte[] bytes = System.Text.Encoding.UTF8.GetBytes("timestamp,player,hat/AI?,source,eventType,old/correct,new/given\n");
-        file.Write(bytes, 0, bytes.Length);
-
-        // Sort the log according to timestamp // TODO: needed?
-        eventLog.Sort(delegate (InstrumentationEvent a, InstrumentationEvent b) { return a.timestamp.CompareTo(b.timestamp); });
-
-        // For each instrumentation...
-        foreach (InstrumentationEvent e in eventLog)
+        if (UnityEngine.InputSystem.Keyboard.current.homeKey.wasReleasedThisFrame)
         {
-            // Find the referenced player
-            Networking.Player eventPlayer = System.Array.Find(NetworkingManager.roomPlayers, p => p.actorNumber == e.playerID);
-
-            // Add the row to the file 
-            bytes = System.Text.Encoding.UTF8.GetBytes(e.timestamp.ToString() + "," + eventPlayer.remoteNickname + "," + eventPlayer.side + "," + e.source + "," + e.eventType + "," + e._old + "," + e._new + "\n");
-            file.Write(bytes, 0, bytes.Length);
+            WriteSession();
         }
-
-        // Close the connection to the file
-        file.Close();
     }
 
-    // Generates a new event, already referencing the local player with the correct current timestamp
-    public InstrumentationEvent generateNewEvent()
+    public string TaiserFolder;
+
+    public void CreateOrFindTaiserFolder()
     {
-        InstrumentationEvent e = new InstrumentationEvent();
-        // Player ID won't be found while debugging... so return 1 in that case
         try
         {
-            e.playerID = NetworkingManager.localPlayer.actorNumber;
+            TaiserFolder = System.IO.Path.Combine(Application.persistentDataPath);
+            System.IO.Directory.CreateDirectory(TaiserFolder);
         }
-        catch (System.NullReferenceException) { e.playerID = 1; }
-        e.timestamp = Time.time;
-        return e;
+        catch (System.Exception e)
+        {
+            Debug.Log("Cannot create Taiser Directory: " + e.ToString());
+        }
+
     }
 
-    // Logs an event (network synced)
-    public void LogInstrumentationEvent(InstrumentationEvent e)
-    {
-        if (photonView is null) eventLog.Add(e);
-        else photonView.RPC("RPC_InstrumentationManager_LogInstrumentationEvent", RpcTarget.AllBuffered, e.playerID, e.timestamp, e.source, e.eventType, e._old, e._new);
-    }
-    public void LogInstrumentationEventIfHost(InstrumentationEvent e) { if (NetworkingManager.isHost) LogInstrumentationEvent(e); }
+    public List<TaiserRecord> records = new List<TaiserRecord>();
+    public TaiserSession session = new TaiserSession();
 
-    // Logs an event (network synced)
-    public void LogInstrumentationEvent(string source, string eventType, string _old = "", string _new = "")
+    public void AddRecord(string eventName, List<string> modifiers)
     {
-        InstrumentationEvent e = generateNewEvent();
-        e.source = source;
-        e.eventType = eventType;
-        e._old = _old;
-        e._new = _new;
-        LogInstrumentationEvent(e);
-    }
-    public void LogInstrumentationEventIfHost(string source, string eventType, string _old = "", string _new = "") { if (NetworkingManager.isHost) LogInstrumentationEvent(source, eventType, _old, _new); }
-
-    // RPC which logs an event on every client
-    [PunRPC]
-    void RPC_InstrumentationManager_LogInstrumentationEvent(int playerID, float timestamp, string source, string eventType, string _old = "", string _new = "")
-    {
-        InstrumentationEvent e = new InstrumentationEvent();
-        e.playerID = playerID;
-        e.timestamp = timestamp;
-        e.source = source;
-        e.eventType = eventType;
-        e._old = _old;
-        e._new = _new;
-
-        eventLog.Add(e);
+        TaiserRecord record = new TaiserRecord();
+        record.eventName = eventName;
+        record.eventModifiers = modifiers;
+        record.secondsFromStart = Time.realtimeSinceStartup;
+        session.records.Add(record);
     }
 
+    public void AddRecord(string eventName, string modifier = "")
+    {
+        TaiserRecord record = new TaiserRecord();
+        record.eventName = eventName;
+        List<string> mods = new List<string>();
+        mods.Add(modifier);
+        record.eventModifiers = mods;
+        record.secondsFromStart = Time.realtimeSinceStartup;
+        session.records.Add(record);
+    }
+    //-----------------------------------------------------------------
 
-    // -- Event Callbacks --
+    //public string csvString;
+    IEnumerator WriteToServer()
+    {
+        XmlDocument map = new XmlDocument();
+        map.LoadXml("<level></level>");
+        byte[] levelData = Encoding.UTF8.GetBytes(MakeHeaderString() + MakeRecords());
+        string fileName = new string(session.name.ToCharArray()); // Path.GetRandomFileName().Substring(0, 8);
+        fileName = fileName + ".csv";
+
+        WWWForm form = new WWWForm();
+        Debug.Log("Created new WWW Form");
+        form.AddField("action", "level upload");
+        form.AddField("file", "file");
+        form.AddBinaryData("file", levelData, fileName, "text/csv");
+        Debug.Log("Binary data added");
+        WWW w = new WWW("https://www.cse.unr.edu/~sushil/taiser/DataLoad.php", form);
+        yield return w;
+
+        if (w.error != null)
+        {
+            Debug.Log("Error: " + w.error);
+        }
+        else
+        {
+            Debug.Log("No errors");
+            if (w.uploadProgress == 1 || w.isDone)
+            {
+                yield return new WaitForSeconds(5);
+                Debug.Log("Waited five seconds");
+            }
+        }
 
 
-    void OnApplicationQuit()
-    {
-        //if(GameManager.instance?.currentWave > GameManager.instance?.maximumWaves) LogInstrumentationEventIfHost("GameManager", "GameEnd");
-        //SaveToFile();
+
     }
 
-    void OnWaveStart() { LogInstrumentationEventIfHost("GameManager", "WaveStart", "", "" + GameManager.instance?.currentWave); }
-    void OnWaveEnd() { LogInstrumentationEventIfHost("GameManager", "WaveEnd", "", "" + GameManager.instance?.currentWave); }
-    void OnScoreEvent(float whiteHatDelta, float whiteHatScore, float blackHatDelta, float blackHatScore)
+    //-----------------------------------------------------------------
+    public static bool isDebug = true;
+    public void WriteSession()
     {
-        LogInstrumentationEventIfHost("ScoreManager", "WhiteHat Score", "" + (whiteHatScore - whiteHatDelta), "" + whiteHatScore);
-        LogInstrumentationEventIfHost("ScoreManager", "BlackHat Score", "" + (blackHatScore - blackHatDelta), "" + blackHatScore);
+        session.whitehatScore = NewGameMgr.inst.WhitehatScore; // BlackhatAI.inst.wscore;
+        session.blackhatScore = NewGameMgr.inst.BlackhatScore; // BlackhatAI.inst.bscore;
+        session.name = (isDebug ? "sjl" : NewLobbyMgr.PlayerName);
+        using (StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserFolder, session.name + ".csv"), FileMode.Create), Encoding.UTF8))
+        {
+            WriteHeader(sw);
+            WriteRecords(sw);
+        }
+
+        StartCoroutine("WriteToServer");
     }
 
-    void OnUpdatedStartingPointRuleEvent(StartingPoint s, PacketRule r)
+    public void WriteHeader(StreamWriter sw)
     {
-        LogInstrumentationEvent("Source #" + s.ID, "ChangedStartPointMaliciousPacketRules", "" + s.spawnedMaliciousPacketRules, "" + r);
-    }
-    void OnProposedStartingPointRuleEvent(StartingPoint s, PacketRule r)
-    {
-        LogInstrumentationEvent("Source #" + s.ID, "ProposedStartPointMaliciousPacketRules", "" + s.spawnedMaliciousPacketRules, "" + r);
-    }
-    void OnUpdatedStartingPointProbabilityEvent(StartingPoint s, float probability)
-    {
-        LogInstrumentationEvent("Source #" + s.ID, "ChangedStartPointMaliciousProbability", "" + s.maliciousPacketProbability, "" + probability);
-    }
-    void OnProposedStartingPointProbabilityEvent(StartingPoint s, float probability)
-    {
-        LogInstrumentationEvent("Source #" + s.ID, "ProposedStartPointMaliciousProbability", "" + s.maliciousPacketProbability, "" + probability);
-    }
-    void OnUpdatedDestinationLikelihoodEvent(Destination d, int likelihood)
-    {
-        LogInstrumentationEvent("Destination #" + d.ID, "ChangedDestinationLikelihood", "" + d.maliciousPacketDestinationLikelihood, "" + likelihood);
-    }
-    void OnProposedDestinationLikelihoodEvent(Destination d, int likelihood)
-    {
-        LogInstrumentationEvent("Destination #" + d.ID, "ProposeDestinationLikelihood", "" + d.maliciousPacketDestinationLikelihood, "" + likelihood);
+        sw.WriteLine(MakeHeaderString());
     }
 
-    void OnMovedFirewallEvent(Firewall f, Vector3 pos, Quaternion _)
+    string eoln = "\r\n"; //CSV RFC: https://datatracker.ietf.org/doc/html/rfc4180
+    public string MakeHeaderString()
     {
-        LogInstrumentationEvent("Firewall #" + f.ID, "PositionedFirewall", "" + f.transform.position, "" + pos);
+        string header = "";
+        header += session.name + ", " + session.role + ", " + session.dayAndTime + eoln;
+        header += "Whitehat Score, " + session.whitehatScore.ToString("00.0") +
+            ", Blackhat Score, " + session.blackhatScore.ToString("00.0") + eoln;
+        header += "Time, Event, Modifiers" + eoln;
+        return header;
     }
-    void OnFirewallUpdatedEvent(Firewall f, PacketRule r)
+
+    public void WriteRecords(StreamWriter sw)
     {
-        LogInstrumentationEvent("Firewall #" + f.ID, "ChangedFirewallFilterRules", f.correctRule.Count > 0 ? "" + f.correctRule : "unkown", "" + r);
+        sw.WriteLine(MakeRecords());
     }
-    void OnFirewallProposedEvent(Firewall f, PacketRule r)
+
+    public string MakeRecords()
     {
-        LogInstrumentationEvent("Firewall #" + f.ID, "ProposedFirewallFilterRules", f.correctRule.Count > 0 ? "" + f.correctRule : "unkown", "" + r);
+        string lines = "";
+        foreach (TaiserRecord tr in session.records)
+        {
+            string mods = CSVString(tr.eventModifiers);
+            lines += tr.secondsFromStart.ToString("0000.0") + ", " + tr.eventName + mods + eoln;
+        }
+        return lines;
+
     }
-    void OnHoneypotUpdatedEvent(Destination d)
+
+    public string CSVString(List<string> mods)
     {
-        LogInstrumentationEvent("Destination #" + d.ID, "MadeDestinationHoneypot");
-    }
-    void OnHoneypotProposedEvent(Destination d)
-    {
-        LogInstrumentationEvent("Destination #" + d.ID, "ProposedMakeDestinationHoneypot");
-    }
-    void OnSuggestedFirewallEvent(SuggestedFirewall f, Vector3 pos, Quaternion _)
-    {
-        LogInstrumentationEvent("WhiteHat", "ProposedFirewallPosition", "", pos.ToString());
+        string modifiers = "";
+        foreach (string mod in mods)
+        {
+            modifiers += ", " + mod;
+        }
+        return modifiers;
     }
 }
