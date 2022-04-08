@@ -9,7 +9,7 @@ public class RoleDropdownHandler : MonoBehaviour
     public Dropdown dropdown;
     public string playerName; //has to be set before OnValueChanged is called
 
-    public NewLobbyMgr.PlayerRole role;
+    public NewLobbyMgr.PlayerRoles role;
     private void Awake()
     {
         dropdown = GetComponent<Dropdown>();
@@ -24,25 +24,27 @@ public class RoleDropdownHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void OnValueChanged(int index)
     {
 
-        if(shouldTrigger) {
-            switch(dropdown.options[index].text.Trim()) {
+        if (shouldTrigger)
+        {
+            switch (dropdown.options[index].text.Trim())
+            {
                 case "Whitehat":
-                    role = NewLobbyMgr.PlayerRole.Whitehat;
+                    role = NewLobbyMgr.PlayerRoles.Whitehat;
                     break;
                 case "Blackhat":
-                    role = NewLobbyMgr.PlayerRole.Blackhat;
+                    role = NewLobbyMgr.PlayerRoles.Blackhat;
                     break;
                 case "Observer":
-                    role = NewLobbyMgr.PlayerRole.Observer;
+                    role = NewLobbyMgr.PlayerRoles.Observer;
                     break;
                 default:
-                    role = NewLobbyMgr.PlayerRole.None;
+                    role = NewLobbyMgr.PlayerRoles.None;
                     break;
             }
 

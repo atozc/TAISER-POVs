@@ -9,6 +9,7 @@ using ExitGames.Client.Photon;
 public class NewNetworkMgr : MonoBehaviourPunCallbacks
 {
     public static NewNetworkMgr inst;
+    public bool doMultiplayer = false;
     private void Awake()
     {
         inst = this;
@@ -17,18 +18,27 @@ public class NewNetworkMgr : MonoBehaviourPunCallbacks
     // Start is called before the first frame update
     void Start()
     {
-        Connect();   
+        if (doMultiplayer)
+            Connect();
+        else
+            SetupSinglePlayer();
+    }
+
+    public void SetupSinglePlayer()
+    {
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
     public string gameVersion = "1.0";
     void Connect()
     {
-        if(!PhotonNetwork.IsConnected) {
+        if (!PhotonNetwork.IsConnected)
+        {
             PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.GameVersion = gameVersion;
         }
@@ -57,7 +67,7 @@ public class NewNetworkMgr : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         base.OnCreatedRoom();
-        Debug.Log("Taiser: OnCreatedRoom: " + PhotonNetwork.CurrentRoom.Name + 
+        Debug.Log("Taiser: OnCreatedRoom: " + PhotonNetwork.CurrentRoom.Name +
                            ", Max players: " + PhotonNetwork.CurrentRoom.MaxPlayers);
     }
 
@@ -70,7 +80,7 @@ public class NewNetworkMgr : MonoBehaviourPunCallbacks
     public void CreateTaiserRoom(string roomName, int maxPlayersPerRoom)
     {
         Photon.Realtime.RoomOptions roomOptions = new RoomOptions();
-        roomOptions.MaxPlayers = (byte) maxPlayersPerRoom; // Photon likes bytes
+        roomOptions.MaxPlayers = (byte)maxPlayersPerRoom; // Photon likes bytes
         PhotonNetwork.CreateRoom(roomName, roomOptions);
         Debug.Log(PhotonNetwork.NickName + " : Created room: " + roomName + " with " + maxPlayersPerRoom + " max players");
     }
@@ -98,11 +108,13 @@ public class NewNetworkMgr : MonoBehaviourPunCallbacks
         NewLobbyMgr.inst.SetWaitingForPlayersLists();
     }
 
-    public override void OnRoomListUpdate(List<RoomInfo> roomList)    {
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
         base.OnRoomListUpdate(roomList);
-        Debug.Log(PhotonNetwork.NickName + 
+        Debug.Log(PhotonNetwork.NickName +
             " got OnRoomListUpdate called with list: " + roomList.ToStringFull<RoomInfo>());
-        foreach(RoomInfo ri in roomList) {
+        foreach (RoomInfo ri in roomList)
+        {
             NewLobbyMgr.inst.CachedRoomList.Add(ri);
         }
         NewLobbyMgr.inst.UpdateRoomList();

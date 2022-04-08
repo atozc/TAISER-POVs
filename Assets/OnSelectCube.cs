@@ -14,12 +14,12 @@ public class OnSelectCube : MonoBehaviour, IPointerClickHandler
     // Update is called once per frame
     void Update()
     {
-        
+
     }
     public TDestination destination;
     public void OnPointerClick(PointerEventData eventData)
     {
         NewGameMgr.inst.OnAttackableDestinationClicked(destination);
     }
-    
+
 }
