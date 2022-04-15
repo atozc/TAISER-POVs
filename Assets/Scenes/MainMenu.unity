@@ -576,7 +576,7 @@ MonoBehaviour:
   PlayerNameText: {fileID: 77297348}
   GameNamePlaceholderText: {fileID: 796971400}
   GameName: 
-  JoinGameSubPanel: {fileID: 0}
+  JoinGameSubPanel: {fileID: 1719754701}
   CachedRoomNameList: []
   RoomButtonsList:
   - {fileID: 1788592530}
