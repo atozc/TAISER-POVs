@@ -1,18 +1,28 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-
+//-------------------------------------------------------------------------------------------
 [System.Serializable]
 public class LightWeightPacket
 {
     public PacketSize size;
     public PacketColor color;
     public PacketShape shape;
+    public TDestination destination = null;
+
+    public LightWeightPacket(LightWeightPacket lwp = null)
+    {
+        if (lwp != null)
+            copy(lwp);
+    }
+
     public bool isMalicious
     {
-        get { return isEqual(BlackhatAI.inst.maliciousRule); }
+        get
+        {
+            return isEqual(destination.MaliciousRule);
+        }
     }
 
     public bool isEqual(LightWeightPacket other)
@@ -21,7 +31,8 @@ public class LightWeightPacket
     }
     public override string ToString()
     {
-        return "" + size.ToString() + ", " + color.ToString() + ", " + shape.ToString();
+        return "" + size.ToString() + ", " + color.ToString() + ", " + shape.ToString() +
+            (destination == null ? "." : ", " + destination.inGameName);
     }
 
     public void copy(LightWeightPacket other)
@@ -29,9 +40,10 @@ public class LightWeightPacket
         color = other.color;
         shape = other.shape;
         size = other.size;
+        destination = other.destination;
     }
 }
-
+//-------------------------------------------------------------------------------------------
 [System.Serializable]
 public class TPath
 {
@@ -39,14 +51,34 @@ public class TPath
     public TDestination destination;
     public List<Waypoint> waypoints;
 }
-
+//-------------------------------------------------------------------------------------------
 [System.Serializable]
 public class SourcePathDebugMap
 {
     public TSource source;
     public List<TPath> paths;
 }
+//-------------------------------------------------------------------------------------------
 
+[System.Serializable]
+public enum Difficulty
+{
+    Novice = 0,
+    Intermediate,
+    Advanced
+}
+
+[System.Serializable]
+public class DifficultyParameters
+{
+    public Difficulty levelName;
+    public int initTime;
+    public int meanTimeInterval;
+    public int timeSpread;
+}
+
+
+//-------------------------------------------------------------------------------------------
 public class NewGameMgr : MonoBehaviour
 {
 
@@ -54,7 +86,7 @@ public class NewGameMgr : MonoBehaviour
     private void Awake()
     {
         inst = this;
-        GatherSources();
+        GatherSourcesDestinations();
     }
 
     // Start is called before the first frame update
@@ -70,18 +102,54 @@ public class NewGameMgr : MonoBehaviour
 
         StartWave();
     }
-    // Update is called once per frame
 
+    // Update is called once per frame
     void Update()
     {
         UpdateScore();
-        if (State == GameState.InWave)
-            BlackhatAI.inst.DoWave();
+        if (endedSources >= Sources.Count || isCorrectIndex >= isCorrectList.Count)
+        {
+            EndWave();
+        }
+        //if(State == GameState.InWave) {
+        //BlackhatAI.inst.DoWave();
+        //}
+        //if(State == GameState.FlushingSourcesToEndWave)
+        //if(Sources[0].gameObject.GetComponentsInChildren<TPacket>().Length <= 0)
+        //EndWave();
 
-        if (State == GameState.FlushingSourcesToEndWave)
-            if (Sources[0].gameObject.GetComponentsInChildren<TPacket>().Length <= 0)
-                EndWave();
+    }
 
+    //-------------------------------------------------------------------------------------------------
+    public Difficulty difficulty;
+    public List<DifficultyParameters> difficultyParamaters = new List<DifficultyParameters>();
+    public void SetDifficulty(Difficulty level)
+    {
+        Debug.Log("Setting difficulty to: " + level);
+        difficulty = level;
+        DifficultyParameters parms = difficultyParamaters.Find(x => x.levelName == level);
+        foreach (TDestination destination in Destinations)
+        {
+            destination.timeInterval = parms.meanTimeInterval;
+            destination.timeSpread = parms.timeSpread;
+            destination.initTime = parms.initTime;
+        }
+
+    }
+
+    //-------------------------------------------------------------------------------------------------
+
+
+
+    //----------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Returns true with probability prob
+    /// </summary>
+    /// <param name="prob">Probability of return true</param>
+    /// <returns></returns>
+    public bool Flip(float prob)
+    {
+        return (TRandom.NextDouble() < prob);
     }
     //----------------------------------------------------------------------------------------------------
     public int maxWaves = 3;
@@ -90,14 +158,16 @@ public class NewGameMgr : MonoBehaviour
     public void StartWave()
     {
         State = GameState.WaveStart;
+        SetDifficulty(NewLobbyMgr.gameDifficulty);
+
         Debug.Log("Startwave: " + currentWaveNumber);
-        BlackhatAI.inst.StartWave();
-        timerSecs = 5;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.StartWave.ToString());
+
         CountdownLabel.text = timerSecs.ToString("0");
         InvokeRepeating("CountdownLabeller", 0.1f, 1f);
     }
 
-    public int timerSecs = 5;
+    int timerSecs = 5;
     public Text CountdownLabel;
 
     void CountdownLabeller()
@@ -107,6 +177,9 @@ public class NewGameMgr : MonoBehaviour
         {
             CancelInvoke("CountdownLabeller");
             State = GameState.InWave;
+            StartWaveAtSources();
+            StartWaveAtDestinations();
+            timerSecs = 5;
         }
         else
         {
@@ -114,33 +187,110 @@ public class NewGameMgr : MonoBehaviour
             timerSecs -= 1;
             CountdownLabel.text = timerSecs.ToString("0");
         }
+
+    }
+
+    public void StartWaveAtSources()
+    {
+        foreach (TSource ts in Sources)
+        {
+            ts.StartWave();
+        }
+    }
+
+    public void StartWaveAtDestinations()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.StartWave();
+        }
+    }
+
+    public void EndWaveAtSources()
+    {
+        foreach (TSource ts in Sources)
+        {
+            ts.EndWave();
+        }
+
+    }
+
+    public void EndWaveAtDestinations()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.EndWave();
+        }
+
+    }
+
+    void PauseDestinationsMaliciousRuleCreationClocks()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.PauseMaliciousClock();
+        }
+    }
+
+    void UnPauseDestinationsMaliciousRuleCreationClocks()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.UnPauseMaliciousClock();
+        }
+    }
+    /// <summary>
+    /// Before you end a wave, make sure that each source has called EndSpawningAtSource
+    /// by counting number of times this method is called by sources.
+    /// If this is > number of sources, reset to 0 and actually end the wave
+    /// </summary>
+    int endedSources = 0;
+    public void EndSpawningAtSources()
+    {
+        endedSources += 1;
+        if (endedSources >= Sources.Count)
+        {
+            endedSources = 0; // not needed, done in EndWave->ResetVars()
+            EndWave();
+        }
+    }
+
+    public void ResetVars()
+    {
+        endedSources = 0;
+        isCorrectIndex = 0;
     }
 
     public Text VictoryOrDefeatText;
     public Text AnotherWaveAwaitsMessageText;
     public void EndWave()
     {
-        Debug.Log("Ending Wave: " + currentWaveNumber);
+        Debug.Log("Ending Wave: " + currentWaveNumber + ", isCorrectIndex: " + isCorrectIndex + ", endedSrcs: " + endedSources);
         State = GameState.WaveEnd;
+        ResetVars();
         SetWaveEndScores();
+        EndWaveAtSources();
+        //We call EndWaveAtDestinations in WaitToStartNextWave to give packets time to reach destinations
+        PauseDestinationsMaliciousRuleCreationClocks();
+
         if (WhitehatScore > BlackhatScore)
         {
             VictoryOrDefeatText.text = "Victory!";
-            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Winning, 2.0f);
+            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Winning, 1.0f);
         }
         else
         {
             VictoryOrDefeatText.text = "Defeat!";
-            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Losing, 8.0f);
+            NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.Losing, 5.0f);
         }
         currentWaveNumber += 1;
         if (currentWaveNumber >= maxWaves)
-            AnotherWaveAwaitsMessageText.text = "Wait... To Wave Goodbye!";
+            AnotherWaveAwaitsMessageText.text = "Wave Goodbye! Bye Bye now...";
         else
-            AnotherWaveAwaitsMessageText.text = "Wait... Get Ready for Wave " + (1 + currentWaveNumber).ToString("0")
+            AnotherWaveAwaitsMessageText.text = "Get Ready for Wave " + (1 + currentWaveNumber).ToString("0")
                 + " of " + maxWaves.ToString("0");
 
-        Invoke("WaitToStartNextWave", 8f);
+        Invoke("WaitToStartNextWave", 5f);
     }
 
     public RectTransform blackhatBarPanel;
@@ -158,11 +308,31 @@ public class NewGameMgr : MonoBehaviour
 
     void WaitToStartNextWave()
     {
+        EndWaveAtDestinations(); //Give a chance for all packets to get to destinations
+        SetWaveEndScores();
         Debug.Log("Waiting to start next wave: " + currentWaveNumber);
         if (currentWaveNumber < maxWaves)
-            StartWave();
+        {
+            StartWave();//Startwave unpauses destination clocks
+        }
         else
+        {
+            InstrumentMgr.inst.WriteSession();
             State = GameState.Menu;
+            ResetGame();
+        }
+    }
+
+    void ResetGame()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.Reset();
+        }
+        foreach (TSource source in Sources)
+        {
+            source.Reset();
+        }
     }
 
 
@@ -182,18 +352,16 @@ public class NewGameMgr : MonoBehaviour
     }
 
 
-    public void PrintSourceD(Dictionary<TSource, List<TPath>> spd)
-    {
-        foreach (TSource key in spd.Keys)
-        {
-            List<TPath> paths = spd[key];
-            foreach (TPath path in paths)
-            {
-                Debug.Log("Path: source: " + path.source.myId + ", dest: " + path.destination.myId
-                    + ", wpCount: " + path.waypoints.Count);
-            }
-        }
-    }
+    //public void PrintSourceD(Dictionary<TSource, List<TPath>> spd)
+    //{
+    //    foreach(TSource key in spd.Keys) {
+    //        List<TPath> paths = spd[key];
+    //        foreach(TPath path in paths) {
+    //            Debug.Log("Path: source: " + path.source.myId + ", dest: " + path.destination.myId
+    //                + ", wpCount: " + path.waypoints.Count);
+    //        }
+    //    }
+    //}
 
     //-------------------------------------------------------------------------------------
     //-------Packet properties for all packets
@@ -235,7 +403,7 @@ public class NewGameMgr : MonoBehaviour
     //---------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
 
-    public int NumberOfPaths = 1;
+    //public int NumberOfPaths = 1;
     public List<TPath> Paths = new List<TPath>();
 
     public List<TSource> Sources = new List<TSource>();
@@ -246,7 +414,7 @@ public class NewGameMgr : MonoBehaviour
     public GameObject DestinationsRoot;
 
     [ContextMenu("GatherSourcesDestinations")]
-    public void GatherSources()
+    public void GatherSourcesDestinations()
     {
         Sources.Clear();
         int index = 0;
@@ -343,20 +511,31 @@ public class NewGameMgr : MonoBehaviour
             //add menu panel
             MenuPanel.isVisible = (_state == GameState.Menu);
 
+            if (_state != GameState.PacketExamining)
+                UnExamineAllDestinations();
 
         }
     }
     //-------------------------------------------------------------------------------------
+
+    public void UnExamineAllDestinations()
+    {
+        foreach (TDestination destination in Destinations)
+        {
+            destination.isBeingExamined = false;
+        }
+    }
+
     //-------------------------------------------------------------------------------------
     //--- When a packet button in the examining panel is clicked
 
     public void OnPacketClicked(LightWeightPacket packet)
     {
-        DisplayPacketInformation(packet); // expand on this
+        DisplayPacketInformation(packet, ClickedPacketRuleTextList); // expand on this
         InstrumentMgr.inst.AddRecord(TaiserEventTypes.PacketInspect.ToString(), packet.ToString());
     }
 
-    public void DisplayPacketInformation(LightWeightPacket packet)
+    public void DisplayPacketInformation(LightWeightPacket packet, List<Text> RuleTextList)
     {
         RuleTextList[0].text = packet.size.ToString();
         RuleTextList[0].fontSize = FontSizes[(int)packet.size];
@@ -364,18 +543,36 @@ public class NewGameMgr : MonoBehaviour
         RuleTextList[1].color = TextColors[(int)packet.color];
         RuleTextList[2].text = packet.shape.ToString();
     }
+
+    public void ClearPacketInformation(List<Text> RuleTextList)
+    {
+        RuleTextList[0].text = "";
+        RuleTextList[1].text = "";
+        RuleTextList[2].text = "";
+
+    }
+
     public List<int> FontSizes = new List<int>();
     public List<Color> TextColors = new List<Color>();
 
-    public List<Text> RuleTextList = new List<Text>();
-    public GameObject RuleTextListRoot;
-    [ContextMenu("SetupButtonArray")]
-    public void SetupButtonArray()
+    public List<Text> ClickedPacketRuleTextList = new List<Text>();
+    public List<Text> AdvisorRuleTextList = new List<Text>();
+
+
+    public GameObject PacketRuleTextListRoot;
+    public GameObject AdvisorRuleTextListRoot;
+    [ContextMenu("SetupRuleTextLists")]
+    public void SetupRuleTextLists()
     {
-        RuleTextList.Clear();
-        foreach (Text t in RuleTextListRoot.GetComponentsInChildren<Text>())
+        ClickedPacketRuleTextList.Clear();
+        foreach (Text t in PacketRuleTextListRoot.GetComponentsInChildren<Text>())
         {
-            RuleTextList.Add(t);
+            ClickedPacketRuleTextList.Add(t);
+        }
+        AdvisorRuleTextList.Clear();
+        foreach (Text t in AdvisorRuleTextListRoot.GetComponentsInChildren<Text>())
+        {
+            AdvisorRuleTextList.Add(t);
         }
     }
 
@@ -384,26 +581,63 @@ public class NewGameMgr : MonoBehaviour
     // PROBLEM: Double indirection to handle design issues
 
     public Text FilterRuleSpecTitle;
+    public List<bool> isCorrectList = new List<bool>(); // which advice is correct, set by programmer in editor
+    public int isCorrectIndex = 0;
+
+    public Text teammateNameText;
+
     public void OnAttackableDestinationClicked(TDestination destination)
     {
-        PacketButtonMgr.inst.OnAttackableDestinationClicked(destination); // multiple things are happening
-        RuleSpecButtonMgr.inst.CurrentDestination = destination;
-        FilterRuleSpecTitle.text = destination.gameName;
-        InstrumentMgr.inst.AddRecord(TaiserEventTypes.MaliciousBuilding.ToString(), destination.name);
+        destination.isBeingExamined = true;
+        PacketButtonMgr.inst.SetupPacketButtonsForInspection(destination); // Setup packet buttons on the top panel
+        ClearPacketInformation(ClickedPacketRuleTextList);
+        RuleSpecButtonMgr.inst.SetDestAndAdvisorRule(destination, isCorrectList[isCorrectIndex++]);
+        SetTeammateName();
+        DisplayPacketInformation(RuleSpecButtonMgr.inst.AdvisorRuleSpec, AdvisorRuleTextList);
+        FilterRuleSpecTitle.text = destination.inGameName;
+        InstrumentMgr.inst.AddRecord(TaiserEventTypes.MaliciousDestinationClicked.ToString(), destination.inGameName);
         State = GameState.PacketExamining;
+    }
+
+    public void SetTeammateName()
+    {
+        teammateNameText.text = NewLobbyMgr.teammateName + "'s advice";
+    }
+
+    public void ApplyFirewallRule(TDestination destination, LightWeightPacket packet, bool isAdvice)
+    {
+        destination.FilterOnRule(packet);
+
+        if (packet.isEqual(destination.MaliciousRule))
+        {
+            if (isAdvice)
+                InstrumentMgr.inst.AddRecord(TaiserEventTypes.AdvisedFirewallCorrectAndSet.ToString());
+            else
+                InstrumentMgr.inst.AddRecord(TaiserEventTypes.UserBuiltFirewallCorrectAndSet.ToString());
+            EffectsMgr.inst.GoodFilterApplied(destination, packet);
+            //NewAudioMgr.inst.PlayOneShot(NewAudioMgr.inst.GoodFilterRule);
+        }
+        else
+        {
+            if (isAdvice)
+                InstrumentMgr.inst.AddRecord(TaiserEventTypes.AdvisedFirewallIncorrectAndSet.ToString());
+            else
+                InstrumentMgr.inst.AddRecord(TaiserEventTypes.UserBuiltFirewallIncorrectAndSet.ToString());
+            EffectsMgr.inst.BadFilterApplied(destination, packet);
+            //NewAudioMgr.inst.source.PlayOneShot(NewAudioMgr.inst.BadFilterRule);
+        }
+
+        destination.isBeingExamined = false;
+        State = GameState.InWave;
     }
 
 
     //-------------------------------------------------------------------------------------
-    public Text whitehatScoreText;
-    public Text blackhatScoreText;
     public RectTransform WhitehatWatchingScorePanel;
     public RectTransform BlackhatWatchingScorePanel;
     public float minScaley = 0.0f;
     public void SetScores(float blackhatScore, float whitehatScore)
     {
-        //whitehatScoreText.text = whitehatScore.ToString("0.0");
-        //blackhatScoreText.text = blackhatScore.ToString("0.0");
         SetBars(BlackhatWatchingScorePanel, blackhatScore, WhitehatWatchingScorePanel, whitehatScore);
     }
     public Vector3 inWaveWhitehatScaler = Vector3.one;
@@ -436,8 +670,8 @@ public class NewGameMgr : MonoBehaviour
             totalMaliciousCount += destination.maliciousCount;
         }
 
-        WhitehatScore = totalMaliciousFilteredCount / (totalMaliciousCount + 1f);
-        BlackhatScore = totalMaliciousUnFilteredCount / (totalMaliciousCount + 1f);
+        WhitehatScore = totalMaliciousFilteredCount / (totalMaliciousCount + 0.000001f);
+        BlackhatScore = totalMaliciousUnFilteredCount / (totalMaliciousCount + 0.000001f);
         SetScores(BlackhatScore, WhitehatScore);
     }
 
@@ -455,7 +689,7 @@ public class NewGameMgr : MonoBehaviour
     }
     public void QuitRoom()
     {
-        InstrumentMgr.inst.WriteSession();
+        //InstrumentMgr.inst.WriteSession();
         UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 
@@ -465,84 +699,11 @@ public class NewGameMgr : MonoBehaviour
         State = GameState.Menu;
     }
 
-    public void OnReady()
-    {
 
-        AudioManager.instance.uiSoundFXPlayer.PlayTrackImmediate("SettingsUpdated");
-
-        //if(NetworkingManager.instance)
-        //    NetworkingManager.instance.setReady(true);
-        //else
-        //    GameManager.instance.StartNextWave();
-
-        State = GameState.WaveStart;
-        //InitTest();
-    }
-
-
-
-    //----------------------------------------------------------------------------------------------------
-    //Deprecated. Only use to see how you might set up a test /Testing
-    //----------------------------------------------------------------------------------------------------
-    int spawnCount = 0;
-    public TSource source;
-    public TDestination destination;
-    /// <summary>
-    /// Deprecated hard. No longer works.
-    /// </summary>
-    public void InitTest()
-    {
-        if (Time.frameCount % 50 == 0 && spawnCount < 20)
-        {
-            TPacket tp = NewEntityMgr.inst.CreatePacket(PacketShape.Cube);
-            tp.transform.parent = source.transform;
-            tp.InitPath(Paths[0]);
-            Debug.Log("Packet from pool: " + tp.Pid);
-            tp.transform.parent = Paths[0].source.transform;
-            tp.SetNextVelocityOnPath();
-            spawnCount += 1;
-        }
-    }
-
-    public float maliciousFraction = 0.5f;
-    int spawnInterval = 10;
     public int RandomSeed = 1234;
-    int maxSpawns = 40;
+    //int maxSpawns = 40;
     public System.Random TRandom;
 
-    /// <summary>
-    /// Deprecated hard. No longer works. Do not use. 
-    /// </summary>
-    public void InitTest2() //spawn a wave
-    {
-        TPacket tp = SpawnRandomPacket();
-        spawnCount += 1;
-        //Debug.Log("Spawned: " + tp.Shape + ", " + tp.TColor + ", " + tp.Size + ", Bad: " + tp.isMalicious);
-        int pathIndex = TRandom.Next(0, Paths.Count);
-        TPath tPath = Paths[pathIndex];
-
-        tp.transform.parent = tPath.source.transform;
-
-        tp.InitPath(tPath);//
-        tp.SetNextVelocityOnPath();
-    }
-
-    public TPacket SpawnRandomPacket()
-    {
-        int shapeIndex = TRandom.Next(0, PacketShapes.Count);
-        PacketShape shape = PacketShapes[shapeIndex];
-        int colorIndex = TRandom.Next(0, PacketColors.Count);
-        PacketColor color = PacketColors[colorIndex];
-        int sizeIndex = TRandom.Next(0, PacketSizes.Count);
-        PacketSize size = PacketSizes[sizeIndex];
-
-        TPacket tp = NewEntityMgr.inst.CreatePacket(shape, color, size);
-        //Cannot test standalone now
-        //tp.packet.copy(BlackhatAI.inst.malRule);
-        // isMalicious = (TRandom.NextDouble() < maliciousFraction);
-
-        return tp;
-    }
 
 
     public TPath FindRandomPath(TSource source)
