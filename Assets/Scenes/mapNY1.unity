@@ -923,7 +923,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   difficulty: 0
-  difficultyParamaters: []
+  difficultyParamaters:
+  - levelName: 0
+    initTime: 0
+    meanTimeInterval: 0
+    timeSpread: 0
+  - levelName: 0
+    initTime: 0
+    meanTimeInterval: 0
+    timeSpread: 0
+  - levelName: 0
+    initTime: 0
+    meanTimeInterval: 0
+    timeSpread: 0
   RandomSeed: 1234
   AIRandomizerSeed: 4321
   HumanRandomizerSeed: 6789
@@ -1023,8 +1035,14 @@ MonoBehaviour:
   - {r: 0.013794856, g: 0.8773585, b: 0.023453137, a: 1}
   - {r: 0.015686268, g: 0.5818253, b: 0.8784314, a: 1}
   - {r: 0.8199442, g: 0.015686268, b: 0.8784314, a: 1}
-  ClickedPacketRuleTextList: []
-  AdvisorRuleTextList: []
+  ClickedPacketRuleTextList:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  AdvisorRuleTextList:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   PacketRuleTextListRoot: {fileID: 0}
   AdvisorRuleTextListRoot: {fileID: 0}
   FilterRuleSpecTitle: {fileID: 393825884}
@@ -2228,7 +2246,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2820001388238589666, guid: a9952aff9f2d5e94ca128e781f933251, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2820001388238589667, guid: a9952aff9f2d5e94ca128e781f933251, type: 3}
       propertyPath: m_RootOrder
@@ -4193,15 +4211,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -3.3
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.92999995
+      value: -3.109
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 6.5
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4241,7 +4259,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3203261902030644824, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.24249995
+      value: -0.24250007
       objectReference: {fileID: 0}
     - target: {fileID: 3203261902030644824, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4253,7 +4271,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3543048675319490572, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: cursorInputForLook
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5542111180780342640, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_CullingMask.m_Bits
@@ -4269,7 +4287,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5542111180780342647, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.24249995
+      value: -0.24250007
       objectReference: {fileID: 0}
     - target: {fileID: 5542111180780342647, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9352,7 +9370,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1304270171
 Transform:
   m_ObjectHideFlags: 0
@@ -13795,11 +13813,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3479864099647416357, guid: 1cd0e95b6cdedf3468ff544424b36f1b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -348
       objectReference: {fileID: 0}
     - target: {fileID: 3479864099647416357, guid: 1cd0e95b6cdedf3468ff544424b36f1b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -23.7
       objectReference: {fileID: 0}
     - target: {fileID: 3479864099647416357, guid: 1cd0e95b6cdedf3468ff544424b36f1b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -13839,7 +13857,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4251720594857276063, guid: 1cd0e95b6cdedf3468ff544424b36f1b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1cd0e95b6cdedf3468ff544424b36f1b, type: 3}
@@ -13990,7 +14008,7 @@ MonoBehaviour:
   CapsulePrefab: {fileID: 4156058107837093388, guid: f22da41146d17b8419345fecb5bf98c8, type: 3}
   CubePrefab: {fileID: 4863944422149962045, guid: 9c8ffc081e41c0a458799c129a8056ef, type: 3}
   SpherePrefab: {fileID: 2494416177592791646, guid: ec8adc762ba9ed746b9d4b76e84d38c6, type: 3}
-  PacketPoolParent: {fileID: 0}
+  PacketPoolParent: {fileID: 1622876367}
   Packets: []
   CubePacketPool: []
   SpherePacketPool: []

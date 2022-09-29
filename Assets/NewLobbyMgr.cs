@@ -619,7 +619,8 @@ public class NewLobbyMgr : MonoBehaviour
         State = LobbyState.Play;
         //UnityEngine.SceneManagement.SceneManager.LoadScene(1); //GraphPrototype
         InstrumentMgr.isDebug = false;
-        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1);
+        //UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1); //Loads map number 1
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(2); //Loads mapNY1
         //PhotonNetwork.LoadLevel(1);
         //...
     }
