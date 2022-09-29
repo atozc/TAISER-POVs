@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RoleDropdownHandler : MonoBehaviour
+public class SpeciesDropdownHandler : MonoBehaviour
 {
-
     public Dropdown dropdown;
     public string playerName; //has to be set before OnValueChanged is called
 
-    public PlayerRoles role;
+    public PlayerSpecies species;
+
     private void Awake()
     {
         dropdown = GetComponent<Dropdown>();
     }
+
 
     // Start is called before the first frame update
     void Start()
@@ -27,6 +28,7 @@ public class RoleDropdownHandler : MonoBehaviour
 
     }
 
+
     public void OnValueChanged(int index)
     {
 
@@ -34,21 +36,21 @@ public class RoleDropdownHandler : MonoBehaviour
         {
             switch (dropdown.options[index].text.Trim())
             {
-                case "Whitehat":
-                    role = PlayerRoles.Whitehat;
+                case "Human":
+                    species = PlayerSpecies.Human;
                     break;
-                case "Blackhat":
-                    role = PlayerRoles.Blackhat;
+                case "AI":
+                    species = PlayerSpecies.AI;
                     break;
-                case "Observer":
-                    role = PlayerRoles.Observer;
+                case "Unknown":
+                    species = PlayerSpecies.Unknown;
                     break;
                 default:
-                    role = PlayerRoles.Whitehat;
+                    species = PlayerSpecies.Unknown;
                     break;
             }
 
-            NewLobbyMgr.inst.OnValueChangedInRoleDropdown(playerName, role, dropdown, index);
+            NewLobbyMgr.inst.OnValueChangedInSpeciesDropdown(playerName, species, dropdown, index);
         }
 
 
@@ -65,3 +67,4 @@ public class RoleDropdownHandler : MonoBehaviour
 
 
 }
+

@@ -202,8 +202,11 @@ public class NewLobbyMgr : MonoBehaviour
 
         //Make me
         TaiserPlayerList.Add(thisPlayer);
+
         SetWaitingForPlayersLists();
 
+        PlayButton.interactable = false;
+        SpinnerPanel.gameObject.SetActive(true);
 
         switch (opponentSpecies)
         {
@@ -286,6 +289,8 @@ public class NewLobbyMgr : MonoBehaviour
         GameName = gameName; //assigned twice if you are game creator
         WaitingForPlayersText.text = thisPlayer.name + ". Waiting for teammate.";
         //InvalidateDropdownsExceptForMine();
+        PlayButton.interactable = false;
+        SpinnerPanel.gameObject.SetActive(true);
         State = LobbyState.WaitingForPlayers;
 
     }
@@ -458,7 +463,6 @@ public class NewLobbyMgr : MonoBehaviour
         UninteractDropdowns();
         ResetPlayerNamesList();
 
-
         int index1 = 0;
         int index2 = 0;
         //PlayerRoles myRole = PlayerRoles.Whitehat;
@@ -499,6 +503,13 @@ public class NewLobbyMgr : MonoBehaviour
 
 
         ValidatePlayButton();
+
+    }
+
+    public RectTransform SpinnerPanel;
+    public void StopSpinner()
+    {
+        SpinnerPanel.gameObject.SetActive(false);
     }
 
     public void SetPlayerInfoDisplay(string name, List<Text> names, PlayerRoles role, List<Dropdown> rolesDropdowns,
@@ -596,6 +607,8 @@ public class NewLobbyMgr : MonoBehaviour
         //    //    PlayButton.interactable = true;
         //} else {
         PlayButton.interactable = true;
+        //SpinnerPanel.GetComponentInChildren<Animation>().Stop();
+        SpinnerPanel.gameObject.SetActive(false);
         //}
         Debug.Log("Creating Game");
     }

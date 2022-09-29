@@ -20,7 +20,7 @@ public class NewEntityMgr : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
 
@@ -31,16 +31,18 @@ public class NewEntityMgr : MonoBehaviour
     public TPacket CubePrefab;
     public TPacket SpherePrefab;
 
-    public TSource PacketPoolParent;
+    public GameObject PacketPoolParent;
 
     public List<TPacket> Packets = new List<TPacket>();
     public static uint packetId = 0;
     public TPacket InstantiatePacket(PacketShape shape, PacketColor color = PacketColor.Blue,
-        PacketSize size = PacketSize.Large)    {
+        PacketSize size = PacketSize.Large)
+    {
 
         //Debug.Log("Creating packet with default parent");
         TPacket tPacket = null;
-        switch(shape) {
+        switch (shape)
+        {
             case PacketShape.Capsule:
                 tPacket = Instantiate<TPacket>(CapsulePrefab, PacketPoolParent.transform);
                 break;
@@ -55,7 +57,8 @@ public class NewEntityMgr : MonoBehaviour
                 tPacket = Instantiate<TPacket>(CapsulePrefab, PacketPoolParent.transform);
                 break;
         }
-        if(null != tPacket) {
+        if (null != tPacket)
+        {
             tPacket.Init(packetId++, color, size);
             Packets.Add(tPacket);
         }
@@ -72,7 +75,8 @@ public class NewEntityMgr : MonoBehaviour
     public void InitPools()
     {
         Debug.Log("initializing pools");
-        foreach(PacketShape shape in System.Enum.GetValues(typeof(PacketShape))) {
+        foreach (PacketShape shape in System.Enum.GetValues(typeof(PacketShape)))
+        {
             PacketPools.Add(shape, new List<TPacket>());
             FillPool(shape, PacketPools[shape], PoolLimit);
         }
@@ -84,7 +88,8 @@ public class NewEntityMgr : MonoBehaviour
     public void FillPool(PacketShape shape, List<TPacket> pool, int limit)
     {
         pool.Clear();
-        for(int i = 0; i < limit; i++) {
+        for (int i = 0; i < limit; i++)
+        {
             pool.Add(InstantiatePacket(shape));
         }
     }
@@ -95,18 +100,21 @@ public class NewEntityMgr : MonoBehaviour
         TPacket packet = null;
 
         List<TPacket> packetPool = PacketPools[shape];
-        if(packetPool.Count > 0) {
+        if (packetPool.Count > 0)
+        {
             packet = packetPool[0];
             packet.ReInit(color, size); //only for pool packet, InstantiatePacket calls Init for new packets
             packetPool.RemoveAt(0);
-        } else {
+        }
+        else
+        {
             Debug.Log("Creating new packet for empty pool");
             packet = InstantiatePacket(shape, color, size);
             PacketPools[shape].Add(packet);
         }
         return packet;
     }
-    
+
     public void ReturnPoolPacket(TPacket packet)
     {
         PacketPools[packet.packet.shape].Add(packet);
