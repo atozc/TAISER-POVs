@@ -922,9 +922,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b06576c1aa6d86d4fac0ae2c94736a08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  difficulty: 0
+  difficultyParamaters: []
+  RandomSeed: 1234
+  AIRandomizerSeed: 4321
+  HumanRandomizerSeed: 6789
+  CorrectAdviceProbability: 0.8
+  HumanCorrectAdviceProbability: 0.8
+  AICorrectAdviceProbability: 0.8
   maxWaves: 3
   currentWaveNumber: 0
-  timerSecs: 5
   CountdownLabel: {fileID: 1634617403}
   VictoryOrDefeatText: {fileID: 170557167}
   AnotherWaveAwaitsMessageText: {fileID: 695752478}
@@ -948,7 +955,6 @@ MonoBehaviour:
   testColor: {r: 0, g: 0, b: 0, a: 0}
   XOrientation: {x: 0, y: 0, z: 0}
   ZOrientation: {x: 0, y: 90, z: 0}
-  NumberOfPaths: 4
   Paths:
   - source: {fileID: 286171742}
     destination: {fileID: 2044506913}
@@ -1017,14 +1023,13 @@ MonoBehaviour:
   - {r: 0.013794856, g: 0.8773585, b: 0.023453137, a: 1}
   - {r: 0.015686268, g: 0.5818253, b: 0.8784314, a: 1}
   - {r: 0.8199442, g: 0.015686268, b: 0.8784314, a: 1}
-  RuleTextList:
-  - {fileID: 1761498186}
-  - {fileID: 835567418}
-  - {fileID: 563902602}
-  RuleTextListRoot: {fileID: 155370639}
+  ClickedPacketRuleTextList: []
+  AdvisorRuleTextList: []
+  PacketRuleTextListRoot: {fileID: 0}
+  AdvisorRuleTextListRoot: {fileID: 0}
   FilterRuleSpecTitle: {fileID: 393825884}
-  whitehatScoreText: {fileID: 794808842}
-  blackhatScoreText: {fileID: 565243804}
+  teammateNameText: {fileID: 0}
+  DelayInSeconds: 3.5
   WhitehatWatchingScorePanel: {fileID: 1103592235}
   BlackhatWatchingScorePanel: {fileID: 512319974}
   minScaley: 0
@@ -1035,10 +1040,6 @@ MonoBehaviour:
   totalMaliciousCount: 0
   totalMaliciousFilteredCount: 0
   totalMaliciousUnFilteredCount: 0
-  source: {fileID: 286171742}
-  destination: {fileID: 0}
-  maliciousFraction: 0.25
-  RandomSeed: 1234
 --- !u!1 &150085108 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2821114473115685132, guid: a9952aff9f2d5e94ca128e781f933251, type: 3}
@@ -1057,11 +1058,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.14292839, y: 0.11945904, z: 0.03589432}
   m_Center: {x: 0.05437589, y: 0.06972934, z: 0.01794716}
---- !u!1 &155370639 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 363519123726807688, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
-  m_PrefabInstance: {fileID: 363519124080839725}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &168106960
 GameObject:
   m_ObjectHideFlags: 0
@@ -4310,28 +4306,6 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 3203261901554096024, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
---- !u!114 &563902602 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 363519125061110779, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
-  m_PrefabInstance: {fileID: 363519124080839725}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &565243804 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1155010759, guid: aa320fc5949a9144384f51c20083a125, type: 3}
-  m_PrefabInstance: {fileID: 1405260224}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &579041806
 GameObject:
   m_ObjectHideFlags: 0
@@ -5527,17 +5501,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.7400009, y: 0.56000066, z: 0.0013960454}
   m_Center: {x: -0.27999973, y: -0.029999875, z: 0.0013179075}
---- !u!114 &794808842 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1155010759, guid: aa320fc5949a9144384f51c20083a125, type: 3}
-  m_PrefabInstance: {fileID: 304671093}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &797458728
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5723,17 +5686,6 @@ Transform:
   m_Father: {fileID: 1713050784}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &835567418 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 363519124578092034, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
-  m_PrefabInstance: {fileID: 363519124080839725}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &846830404 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1310984525901765610, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
@@ -6937,23 +6889,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3a4c01d67af45f45a152c812971e9c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnProbabilityPerSource: 0.02
-  perWaveMaxSpawns: 20
-  malPacketProbability: 0.4
-  maliciousRule:
-    size: 0
-    color: 0
-    shape: 0
-  currentRule:
-    size: 0
-    color: 0
-    shape: 0
-  malSizeWeights: 
-  malColorWeights: 
-  malShapeWeights: 
-  packetCount: 0
-  totalCurrentFilteredThreshold: 0
-  threshold: 40
 --- !u!1 &1026926052
 GameObject:
   m_ObjectHideFlags: 0
@@ -7236,10 +7171,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TaiserFolder: 
-  records: []
   session:
-    name: 
+    name: caa
     role: 0
+    teammateSpecies: 0
+    dayAndTime: 
+    gameDifficulty: 0
     whitehatScore: 0
     blackhatScore: 0
     records: []
@@ -10235,11 +10172,18 @@ MonoBehaviour:
     - {fileID: 1690238908}
   nrows: 3
   ncols: 3
+  AcceptAdviceButton: {fileID: 0}
   CurrentDestination: {fileID: 0}
-  RuleSpecFromPlayer:
+  PlayerRuleSpec:
     size: 0
     color: 0
     shape: 0
+    destination: {fileID: 0}
+  AdvisorRuleSpec:
+    size: 0
+    color: 0
+    shape: 0
+    destination: {fileID: 0}
 --- !u!114 &1458555326 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1310984525751063662, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
@@ -11185,8 +11129,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbc987611445d0f4aa19527def707824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  malPacketProbability: 0.25
+  timeInterval: 0.5
+  maxPackets: 30
+  sourceState: 0
   myId: 0
   gameName: 
+  packetCount: 0
 --- !u!1001 &1634617401
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11874,17 +11823,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2820001388238589667, guid: a9952aff9f2d5e94ca128e781f933251, type: 3}
   m_PrefabInstance: {fileID: 307497878}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1761498186 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 363519123863724507, guid: 2f3c285f468fc9949a714c3fd42e41ca, type: 3}
-  m_PrefabInstance: {fileID: 363519124080839725}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1780435865
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13991,7 +13929,7 @@ MonoBehaviour:
   CapsulePrefab: {fileID: 4156058107837093388, guid: f22da41146d17b8419345fecb5bf98c8, type: 3}
   CubePrefab: {fileID: 4863944422149962045, guid: 9c8ffc081e41c0a458799c129a8056ef, type: 3}
   SpherePrefab: {fileID: 2494416177592791646, guid: ec8adc762ba9ed746b9d4b76e84d38c6, type: 3}
-  PacketPoolParent: {fileID: 1622876369}
+  PacketPoolParent: {fileID: 0}
   Packets: []
   CubePacketPool: []
   SpherePacketPool: []
