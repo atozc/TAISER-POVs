@@ -32,10 +32,36 @@ public class AdminWriteFile : MonoBehaviour
     public InputField userName;
     public InputField packetSpeed;
     public InputField badPacketRatio;
+    public InputField MaxPacketNumber;
+    public InputField MeanIntervalRuleChanges;
+    public InputField IntervalDeviation;
+    public InputField AICorrectProbability;
+    public InputField AIRandomSeed;
+    public InputField HumanCorrectProbability;
+    public InputField HumanRandomSeed;
+    public InputField MinHumanAdviceTime;
+    public InputField MaxWaves;
+    public InputField MaxHumanAdviceTime;
+    public InputField MinAIAdviceTime;
+    public InputField MaxAIAdviceTime;
+    public InputField Penalty;
     [Header("Data Strings")]
     public string usernameText;
     public string packetSpeedText;
     public string badPacketRatioText;
+    public string MaxPacketNumberText;
+    public string MeanIntervalRuleChangesText;
+    public string IntervalDeviationText;
+    public string AICorrectProbabilityText;
+    public string AIRandomSeedText;
+    public string HumanCorrectProbabilityText;
+    public string HumanRandomSeedText;
+    public string MinHumanAdviceTimeText;
+    public string MaxWavesText;
+    public string MaxHumanAdviceTimeText;
+    public string MinAIAdviceTimeText;
+    public string MaxAIAdviceTimeText;
+    public string PenaltyText;
 
     // Start is called before the first frame update
     void Start()
@@ -87,8 +113,21 @@ public class AdminWriteFile : MonoBehaviour
         usernameText = userName.text;
         packetSpeedText = packetSpeed.text;
         badPacketRatioText = badPacketRatio.text;
+        MaxPacketNumberText = MaxPacketNumber.text;
+        MeanIntervalRuleChangesText = MeanIntervalRuleChanges.text;
+        IntervalDeviationText = IntervalDeviation.text;
+        AICorrectProbabilityText = AICorrectProbability.text;
+        AIRandomSeedText = AIRandomSeed.text;
+        HumanCorrectProbabilityText = HumanCorrectProbability.text;
+        HumanRandomSeedText = HumanRandomSeed.text;
+        MinHumanAdviceTimeText = MinHumanAdviceTime.text;
+        MaxWavesText = MaxWaves.text;
+        MaxHumanAdviceTimeText = MaxHumanAdviceTime.text;
+        MinAIAdviceTimeText = MinAIAdviceTime.text;
+        MaxAIAdviceTimeText = MaxAIAdviceTime.text;
+        PenaltyText = Penalty.text;
 
-        session.dayandTime = System.DateTime.Now.ToUniversalTime().ToString();
+    session.dayandTime = System.DateTime.Now.ToUniversalTime().ToString();
         string tmp = System.DateTime.Now.ToLocalTime().ToString();
 
         using (StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserAdminFolder, "parameters.csv"), FileMode.Create), Encoding.UTF8))
@@ -148,6 +187,19 @@ public class AdminWriteFile : MonoBehaviour
         //header += usernameText + ", " + eoln;
         header += "Packet Speed ," + packetSpeedText + eoln;
         header += "Bad Packet Ratio ," + badPacketRatioText + eoln;
+        header += "Max Packet Number ," + MaxPacketNumberText + eoln;
+        header += "Mean Interval Rule Chamges ," + MeanIntervalRuleChangesText + eoln;
+        header += "Interval Deviation ," + IntervalDeviationText + eoln;
+        header += "AI Correct Probabiltiy ," + AICorrectProbabilityText + eoln;
+        header += "AI Random Seed ," + AIRandomSeedText + eoln;
+        header += "Human Correct Probability ," + HumanCorrectProbabilityText + eoln;
+        header += "Human Random Seed ," + HumanRandomSeedText + eoln;
+        header += "Min Human Advice Time ," + MinHumanAdviceTimeText + eoln;
+        header += "Max Waves ," + MaxWavesText + eoln;
+        header += "Max Human Advice Time ," + MaxHumanAdviceTimeText + eoln;
+        header += "Min AI Advice Time ," + MinHumanAdviceTimeText + eoln;
+        header += "Max AI Advice Time ," + MaxAIAdviceTimeText + eoln;
+        header += "Penalty ," + PenaltyText + eoln;
         return header;
     }
 
