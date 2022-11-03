@@ -113,6 +113,9 @@ public class AdminReadFile : MonoBehaviour
         string[] splitMinAIAdviceTime = MinAIAdviceTime.Split(',');
         MinAIAdviceTime = splitMinAIAdviceTime[1];
 
+        string[] splitMaxAIAdviceTime = MaxAIAdviceTime.Split(',');
+        MaxAIAdviceTime = splitMaxAIAdviceTime[1];
+
         string[] splitPenalty = Penalty.Split(',');
         Penalty = splitPenalty[1];
     }

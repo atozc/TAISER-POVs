@@ -15,13 +15,14 @@ public class TSource : MonoBehaviour
         //sourceState = SourceStates.Idle;
         Reset();
         Debug.Log(gameName + ": " + myId + ": " + timeInterval.ToString() + ", " + transform.parent.gameObject.name);
+
     }
 
     public float malPacketProbability = 0.25f;
 
     float dt;
     public float timeInterval = 0.5f; // between spawns, Set this in editor to tune game
-    public int maxPackets = 30; //Set this in editor to tune game
+    public int maxPackets;// = 30; //Set this in editor to tune game
     public SourceStates sourceState;
     public int myId;
     public string gameName;
@@ -31,18 +32,15 @@ public class TSource : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (sourceState == SourceStates.Spawning)
-        {
+        if(sourceState == SourceStates.Spawning) {
             dt -= Time.deltaTime;
-            if (dt <= 0)
-            {
+            if(dt <= 0) {
                 dt = timeInterval;
                 SetupAndSpawnPacket();
                 packetCount++;
             }
         }
-        if (packetCount >= maxPackets)
-        {
+        if(packetCount >= maxPackets) {
             NewGameMgr.inst.EndSpawningAtSources();
         }
     }
@@ -72,12 +70,9 @@ public class TSource : MonoBehaviour
         TPath path = NewGameMgr.inst.FindRandomPath(this);
         TDestination destination = path.destination;
 
-        if (NewGameMgr.inst.Flip(malPacketProbability))
-        {
+        if(NewGameMgr.inst.Flip(malPacketProbability)) {
             SpawnPacket(destination.MaliciousRule, path);
-        }
-        else
-        {
+        } else {
             SpawnPacket(BlackhatAI.inst.CreateNonMaliciousPacketRuleForDestination(destination), path);
         }
     }
@@ -92,7 +87,7 @@ public class TSource : MonoBehaviour
 
         tp.transform.parent = this.transform;
         tp.InitPath(path); // set heading changes at waypoints
-        if (tp.NextHeadings[0] == Vector3.zero)
+        if(tp.NextHeadings[0] == Vector3.zero)
             Debug.LogError("No path for this packet: " + tp.Pid);
         tp.SetNextVelocityOnPath(); //start moving
 

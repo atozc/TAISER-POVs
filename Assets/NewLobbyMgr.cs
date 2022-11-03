@@ -4,10 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 
-//using Photon.Realtime;
-//using Photon.Pun;
-
-
 public class NewLobbyMgr : MonoBehaviour
 {
     public static NewLobbyMgr inst;
@@ -20,6 +16,7 @@ public class NewLobbyMgr : MonoBehaviour
     void Start()
     {
         State = LobbyState.StartOrQuit;
+        //State = LobbyState.Admin;
         SetPriorStateMap();
     }
 
@@ -43,29 +40,14 @@ public class NewLobbyMgr : MonoBehaviour
     {
         StartOrQuit = 0,
         EnterAlias,
+        Admin,            // if Alias is Administrator
         CreateOrJoin,
         MissionObjective,
-        ChooseTeammateSpecies,
+        ChooseDifficulty,
         WaitingForPlayers,
         Play,
         None
     }
-
-    //public enum PlayerSpecies
-    //{
-    //    AI = 0,
-    //    Human,
-    //    Unknown
-    //}
-
-    ////------------------------------------------------------------------
-    //public enum PlayerRoles
-    //{
-    //    Whitehat = 0,
-    //    Blackhat,
-    //    Observer
-    //}
-
 
     public LobbyState _state;
     public LobbyState State
@@ -75,25 +57,34 @@ public class NewLobbyMgr : MonoBehaviour
         {
             _state = value;
             StartPanel.isVisible = (_state == LobbyState.StartOrQuit);
+            AdminPanel.isVisible = (_state == LobbyState.Admin);
             EnterAliasPanel.isVisible = (_state == LobbyState.EnterAlias);
             CreateOrJoinGamePanel.isVisible = (_state == LobbyState.CreateOrJoin);
             WaitingForPlayersPanel.isVisible = (_state == LobbyState.WaitingForPlayers);
             MissionObjectivePanel.isVisible = (_state == LobbyState.MissionObjective);
-            ChooseTeammateSpeciesPanel.isVisible = (_state == LobbyState.ChooseTeammateSpecies);
+            //ChooseGameDifficultyPanel.isVisible = (_state == LobbyState.ChooseDifficulty);
         }
     }
+    public TaiserPanel AdminPanel;
     public TaiserPanel StartPanel;
     public TaiserPanel EnterAliasPanel;
     public TaiserPanel CreateOrJoinGamePanel;
     public TaiserPanel WaitingForPlayersPanel;
     public TaiserPanel MissionObjectivePanel;
-    public TaiserPanel ChooseTeammateSpeciesPanel;
+    public TaiserPanel ChooseGameDifficultyPanel;
+    public RectTransform TeammateChoiceDropdownPanel;//Just the teammate Species choice label and dropdown
+    public Text TeammateChoiceGameDifficultySubtitleText;
 
 
     //Button handling =============================================================================
-    public void OnStartButton()
+    public void OnPlayButton()
     {
         State = LobbyState.EnterAlias;
+    }
+    public void OnAdminStoreButton()
+    {
+        AdminMgr.inst.WriteParamsToServer();
+        State = LobbyState.StartOrQuit;
     }
 
     public void OnNextButton()
@@ -117,8 +108,8 @@ public class NewLobbyMgr : MonoBehaviour
         PriorStateMap.Add(LobbyState.EnterAlias, LobbyState.StartOrQuit);
         PriorStateMap.Add(LobbyState.CreateOrJoin, LobbyState.EnterAlias);
         PriorStateMap.Add(LobbyState.MissionObjective, LobbyState.CreateOrJoin);
-        PriorStateMap.Add(LobbyState.ChooseTeammateSpecies, LobbyState.MissionObjective);
-        PriorStateMap.Add(LobbyState.WaitingForPlayers, LobbyState.ChooseTeammateSpecies);
+        //PriorStateMap.Add(LobbyState.ChooseDifficulty, LobbyState.MissionObjective);
+        PriorStateMap.Add(LobbyState.WaitingForPlayers, LobbyState.MissionObjective);
         PriorStateMap.Add(LobbyState.Play, LobbyState.WaitingForPlayers);
         //PriorStateMap.Add(LobbyState.Play, LobbyState.Play);
     }
@@ -134,6 +125,7 @@ public class NewLobbyMgr : MonoBehaviour
 
     //-----------------------------------------------------------
     public static string PlayerName = "sjl";
+    public string PlayerNameForDebug;
     public static TaiserPlayer thisPlayer;
     public static Difficulty gameDifficulty;
     public static PlayerSpecies teammateSpecies;
@@ -160,22 +152,15 @@ public class NewLobbyMgr : MonoBehaviour
 
         GameName = PlayerName + "_Taiser";
         GameNamePlaceholderText.text = GameName;
-        //NetworkingManager.instance.JoinLobby();
 
-        //if(!NetworkingManager.gameOpened)
-        //    NetworkingManager.gameOpened = true;
+        PlayerNameForDebug = PlayerName;
 
+        if(PlayerName.Trim().ToLower().Contains("admin")) {
+            State = LobbyState.Admin;
+        } else {
+            State = LobbyState.CreateOrJoin;
+        }
 
-        //if(!NewNetworkMgr.inst.doMultiplayer) {
-        //    //PhotonNetwork.LocalPlayer.NickName = PlayerName;
-        //    //JoinGameSubPanel.gameObject.SetActive(false);
-        //} else {
-        //    //Debug.Log("Joined Lobby with name: " + PhotonNetwork.LocalPlayer.NickName);
-        //    //UpdateRoomList();
-        //}
-
-        State = LobbyState.CreateOrJoin;
-        //...
     }
 
 
@@ -190,14 +175,7 @@ public class NewLobbyMgr : MonoBehaviour
         //updatePlayerAlias();
         GameName =
             (GameNameInputField.text.Length == 0 ? GameName : GameNameInputField.text);
-        //NetworkingManager.instance.CreateRoom(GameName, /*max players*/ 2, true);
-        //if(NewNetworkMgr.inst.doMultiplayer) {
-        //    //NewNetworkMgr.inst.CreateTaiserRoom(GameName, MaxPlayersPerRoom);
-        //    //isRoomCreator = true;
-        //    //SetNetworkPlayerRole(PlayerRoles.Whitehat);
-        //}
 
-        //Clear player list
         TaiserPlayerList.Clear();
 
         //Make me
@@ -208,8 +186,7 @@ public class NewLobbyMgr : MonoBehaviour
         PlayButton.interactable = false;
         SpinnerPanel.gameObject.SetActive(true);
 
-        switch (opponentSpecies)
-        {
+        switch(opponentSpecies) {
             case PlayerSpecies.AI:
                 Invoke("MakeAIPlayerAndActivatePlayButton", 0.1f);
                 break;
@@ -224,8 +201,8 @@ public class NewLobbyMgr : MonoBehaviour
                 break;
         }
 
-        switch (teammateSpecies)
-        {
+
+        switch(teammateSpecies) {
             case PlayerSpecies.AI:
                 int x = Random.Range(20, 99);
                 teammateName = "CyberAI " + x.ToString("00");
@@ -247,42 +224,39 @@ public class NewLobbyMgr : MonoBehaviour
 
     }
 
+    public TextTypingAnimation TTAnimator;
+
     public void ShowBriefing()
     {
         State = LobbyState.MissionObjective;
+        TTAnimator.Animate = true;
     }
 
     public void OnBriefingDoneButton()
     {
-        State = LobbyState.ChooseTeammateSpecies;
+        //State = LobbyState.ChooseDifficulty;
+        State = LobbyState.WaitingForPlayers;
+        TTAnimator.Animate = false;
+        if(!ChooseOnce)
+            FixTeammateSpeciesUIElements();
+        CreateGameAndWaitForPlayers();
     }
 
+    void FixTeammateSpeciesUIElements()
+    {
+        TeammateChoiceDropdownPanel.gameObject.SetActive(false);
+        TeammateChoiceGameDifficultySubtitleText.text = "Novice, Intermediate, or Advanced?";
+    }
+
+    /// <summary>
+    /// Deprecated
+    /// </summary>
     public void OnChooseTeammateDoneButton()
     {
         State = LobbyState.WaitingForPlayers;
         CreateGameAndWaitForPlayers();
     }
 
-
-    //End button handling =============================================================================
-
-    //public void SetNetworkPlayerRole(PlayerRoles role)
-    //{
-    //    ExitGames.Client.Photon.Hashtable playerProps = new ExitGames.Client.Photon.Hashtable();
-    //    playerProps.Add("R", role.ToString());
-    //    //PhotonNetwork.LocalPlayer.SetCustomProperties(playerProps);
-    //}
-    //------------------------------------------------------------------
-
-    //public void JoinExistingRoomButtonClicked(int buttonId)
-    //{
-    //    string roomName = RoomButtonsList[buttonId].GetComponentInChildren<Text>().text.Trim();
-    //    Debug.Log(PhotonNetwork.NickName + " is joining " + roomName);
-    //    //SetNetworkPlayerRole(PlayerRoles.Blackhat);
-    //    NewNetworkMgr.inst.JoinTaiserRoom(roomName);
-
-    //    WaitForPlayers(roomName);
-    //}
 
     public void WaitForPlayers(string gameName)
     {
@@ -295,34 +269,18 @@ public class NewLobbyMgr : MonoBehaviour
 
     }
 
-    //public List<RoomInfo> CachedRoomList = new List<RoomInfo>();
-    public List<string> CachedRoomNameList = new List<string>();
+//    public List<string> CachedRoomNameList = new List<string>();
     public List<Button> RoomButtonsList = new List<Button>();
-    //public void UpdateRoomList()
-    //{
-    //    CachedRoomNameList.Clear();
-    //    int i = 0;
-    //    foreach (RoomInfo ri in CachedRoomList) {
-    //        if(ri.Name != GameName && i < 4) {//Can only do 4 buttons/rooms/games
-    //            RoomButtonsList[i].interactable = true;
-    //            RoomButtonsList[i].GetComponentInChildren<Text>().text = ri.Name;
-    //            i++;
-    //            CachedRoomNameList.Add(ri.Name);
-
-    //        }
-    //    }
-    //}
 
     public RectTransform GameButtonsPanel;
     [ContextMenu("FindConnectGameButtons")]
     public void FindConnectGameButtons()
     {
         RoomButtonsList.Clear();
-        foreach (Button b in GameButtonsPanel.GetComponentsInChildren<Button>())
-        {
+        foreach(Button b in GameButtonsPanel.GetComponentsInChildren<Button>()) {
             RoomButtonsList.Add(b);
             b.interactable = false;
-
+            
         }
     }
 
@@ -332,9 +290,8 @@ public class NewLobbyMgr : MonoBehaviour
 
     // and then finally run Menu item below to initialize waiting for players labels and dropdowns
     // Just do this once, beats using editor to connect them all up
-    [ContextMenu("FindConnectInitLabelDropdowns")]
-    public void FindConnectInitLabelDropdowns()
-    {
+    [ContextMenu("FindConnectInitLabelDropdowns")] 
+    public void FindConnectInitLabelDropdowns (){
         ConnectTeam(Team1Panel, Team1PlayerNamesList, Team1PlayerRolesList, Team1PlayerSpeciesList);
         ConnectTeam(Team2Panel, Team2PlayerNamesList, Team2PlayerRolesList, Team2PlayerSpeciesList);
     }
@@ -350,14 +307,12 @@ public class NewLobbyMgr : MonoBehaviour
     public List<TaiserPlayer> TaiserPlayerList = new List<TaiserPlayer>();
     //public List<TaiserPlayer> TeammatePlayers = new List<TaiserPlayer>();
 
-    public void ConnectTeam(RectTransform panel, List<Text> players, List<Dropdown> teamDropdowns,
+    public void ConnectTeam(RectTransform panel, List<Text> players, List<Dropdown> teamDropdowns, 
         List<Dropdown> speciesDropdowns)
     {
         players.Clear();
-        foreach (Text t in panel.GetComponentsInChildren<Text>())
-        {
-            if (t.gameObject.name == "TaiserText")
-            {
+        foreach(Text t in panel.GetComponentsInChildren<Text>()) {
+            if(t.gameObject.name == "TaiserText") {
                 t.text = "";
                 players.Add(t);
             }
@@ -365,8 +320,7 @@ public class NewLobbyMgr : MonoBehaviour
 
         //Debug.Log("Roles: " + System.Enum.GetNames(typeof(PlayerRoles)).ToList<string>());
         teamDropdowns.Clear();
-        foreach (RoleDropdownHandler rdh in panel.GetComponentsInChildren<RoleDropdownHandler>())
-        {
+        foreach(RoleDropdownHandler rdh in panel.GetComponentsInChildren<RoleDropdownHandler>()) { 
             Dropdown d = rdh.GetComponentInParent<Dropdown>();
             d.ClearOptions();
             d.AddOptions(System.Enum.GetNames(typeof(PlayerRoles)).ToList<string>());// dropdownValues);
@@ -374,8 +328,7 @@ public class NewLobbyMgr : MonoBehaviour
         }
 
         speciesDropdowns.Clear();
-        foreach (SpeciesDropdownHandler sdh in panel.GetComponentsInChildren<SpeciesDropdownHandler>())
-        {
+        foreach(SpeciesDropdownHandler sdh in panel.GetComponentsInChildren<SpeciesDropdownHandler>()) {
             Dropdown d = sdh.GetComponentInParent<Dropdown>();
             d.ClearOptions();
             d.AddOptions(System.Enum.GetNames(typeof(PlayerSpecies)).ToList<string>());// dropdownValues);
@@ -388,9 +341,6 @@ public class NewLobbyMgr : MonoBehaviour
 
     public InputField GameNameInputField;
     public Text WaitingForPlayersText;
-    //public int MaxPlayersPerRoom;
-    //public bool isRoomCreator = false;
-
 
 
     public void MakePlayerAndActivatePlayButton(string name, PlayerRoles role, PlayerSpecies species, bool isOpponent)
@@ -419,8 +369,8 @@ public class NewLobbyMgr : MonoBehaviour
 
     public void MakeUnknownPlayerAndActivatePlayButton()
     {
-        TaiserPlayer aip = new TaiserPlayer("Unknown " + Random.Range(0, 100).ToString("00"),
-            PlayerRoles.Blackhat, PlayerSpecies.Unknown);
+        TaiserPlayer aip = new TaiserPlayer("Unknown " + Random.Range(0,100).ToString("00"), 
+            PlayerRoles.Blackhat, PlayerSpecies.Unknown); 
         TaiserPlayerList.Add(aip);
         SetWaitingForPlayersLists();
     }
@@ -433,30 +383,7 @@ public class NewLobbyMgr : MonoBehaviour
         return HumanNames[choice];
     }
 
-    //public PlayerRoles GetRole(Player p)
-    //{
-    //    object myRoleObject;
-    //    bool status = p.CustomProperties.TryGetValue("R", out myRoleObject);
-    //    PlayerRoles role = PlayerRoles.Whitehat;
-    //    if(status) {
-    //        string myRoleString = myRoleObject.ToString();
-    //        switch (myRoleString) {
-    //            case "Blackhat":
-    //                role = PlayerRoles.Blackhat;
-    //                break;
-    //            case "Whitehat":
-    //                role = PlayerRoles.Whitehat;
-    //                break;
-    //            case "Observer":
-    //                role = PlayerRoles.Observer;
-    //                break;
-    //            default:
-    //                role = PlayerRoles.Whitehat;
-    //                break;
-    //        }
-    //    }
-    //    return role;
-    //}
+ 
 
     public void SetWaitingForPlayersLists()
     {
@@ -465,39 +392,14 @@ public class NewLobbyMgr : MonoBehaviour
 
         int index1 = 0;
         int index2 = 0;
-        //PlayerRoles myRole = PlayerRoles.Whitehat;
 
-        //        if(NewNetworkMgr.inst.doMultiplayer) {
-        //myRole = GetRole(PhotonNetwork.LocalPlayer);
-        //Team1PlayerRolesList[index1].interactable = true;
-        //SetPlayerInfoDisplay(PlayerName, Team1PlayerNamesList, myRole, Team1PlayerRolesList, teammateType, 
-        //    Team1PlayerSpeciesList,  index1++);
 
-        //foreach(Player p in PhotonNetwork.CurrentRoom.Players.Values) {
-        //    if(p.NickName != PhotonNetwork.LocalPlayer.NickName) {
-        //        PlayerRoles pRole = GetRole(p);
-        //        if(pRole == myRole)
-        //            SetPlayerInfoDisplay(p.NickName, Team1PlayerNamesList, pRole, Team1PlayerRolesList, 
-        //                PlayerSpecies.Unknown, Team1PlayerSpeciesList,  index1++);
-        //        else
-        //            SetPlayerInfoDisplay(p.NickName, Team2PlayerNamesList, pRole, Team2PlayerRolesList, 
-        //                PlayerSpecies.Unknown, Team2PlayerSpeciesList, index2++);
-
-        //    }
-        //}
-        //} else {//single player against (pretend-human)/ai opponent
-        //    myRole = PlayerRole;
-        //    SetPlayerInfoDisplay(PlayerName, Team1PlayerNamesList, myRole, Team1PlayerRolesList,
-        //        PlayerSpecies.Human, Team1PlayerSpeciesList, index1++);
-        //}
-
-        foreach (TaiserPlayer tp in TaiserPlayerList)
-        {
-            if (tp.role == thisPlayer.role)
-                SetPlayerInfoDisplay(tp.name, Team1PlayerNamesList, tp.role, Team1PlayerRolesList,
+        foreach(TaiserPlayer tp in TaiserPlayerList) {
+            if(tp.role == thisPlayer.role)
+                SetPlayerInfoDisplay(tp.name, Team1PlayerNamesList, tp.role, Team1PlayerRolesList, 
                     tp.species, Team1PlayerSpeciesList, index1++);
             else
-                SetPlayerInfoDisplay(tp.name, Team2PlayerNamesList, tp.role, Team2PlayerRolesList,
+                SetPlayerInfoDisplay(tp.name, Team2PlayerNamesList, tp.role, Team2PlayerRolesList, 
                     tp.species, Team2PlayerSpeciesList, index2++);
         }
 
@@ -512,16 +414,16 @@ public class NewLobbyMgr : MonoBehaviour
         SpinnerPanel.gameObject.SetActive(false);
     }
 
-    public void SetPlayerInfoDisplay(string name, List<Text> names, PlayerRoles role, List<Dropdown> rolesDropdowns,
+    public void SetPlayerInfoDisplay(string name, List<Text> names, PlayerRoles role, List<Dropdown> rolesDropdowns, 
         PlayerSpecies species, List<Dropdown> speciesDropdowns, int i)
     {
         names[i].text = name;
         RoleDropdownHandler rdh = rolesDropdowns[i].GetComponent<RoleDropdownHandler>();
         rdh.playerName = name;
-        rdh.SetValueWithoutTrigger((int)role);
+        rdh.SetValueWithoutTrigger((int) role);
         SpeciesDropdownHandler sdh = speciesDropdowns[i].GetComponent<SpeciesDropdownHandler>();
         sdh.playerName = name;
-        sdh.SetValueWithoutTrigger((int)species);
+        sdh.SetValueWithoutTrigger((int) species);
 
     }
 
@@ -555,74 +457,60 @@ public class NewLobbyMgr : MonoBehaviour
     //----------------------------------------------------------------------
     public void UninteractDropdowns()
     {
-        foreach (Dropdown dropdown in Team2PlayerRolesList)
-        {
-            dropdown.GetComponent<RoleDropdownHandler>().SetValueWithoutTrigger((int)PlayerRoles.Blackhat);
+        foreach(Dropdown dropdown in Team2PlayerRolesList) {
+            dropdown.GetComponent<RoleDropdownHandler>().SetValueWithoutTrigger((int) PlayerRoles.Blackhat);
             dropdown.interactable = false;
         }
-        foreach (Dropdown dropdown in Team1PlayerRolesList)
-        {
+        foreach(Dropdown dropdown in Team1PlayerRolesList) {
             dropdown.interactable = false;
-            dropdown.GetComponent<RoleDropdownHandler>().SetValueWithoutTrigger((int)thisPlayer.role);
+            dropdown.GetComponent<RoleDropdownHandler>().SetValueWithoutTrigger((int) thisPlayer.role);
         }
         //Species
-        foreach (Dropdown dropdown in Team2PlayerSpeciesList)
-        {
+        foreach(Dropdown dropdown in Team2PlayerSpeciesList) {
             dropdown.interactable = false;
-            dropdown.GetComponent<SpeciesDropdownHandler>().SetValueWithoutTrigger((int)PlayerSpecies.Unknown);
+            dropdown.GetComponent<SpeciesDropdownHandler>().SetValueWithoutTrigger((int) PlayerSpecies.Unknown);
         }
-        foreach (Dropdown dropdown in Team1PlayerSpeciesList)
-        {
+        foreach(Dropdown dropdown in Team1PlayerSpeciesList) {
             dropdown.interactable = false;
-            dropdown.GetComponent<SpeciesDropdownHandler>().SetValueWithoutTrigger((int)PlayerSpecies.Unknown);
+            dropdown.GetComponent<SpeciesDropdownHandler>().SetValueWithoutTrigger((int) PlayerSpecies.Unknown);
         }
 
     }
 
     public void ResetPlayerNamesList()
     {
-        foreach (Text txt in Team1PlayerNamesList)
-        {
+        foreach(Text txt in Team1PlayerNamesList) {
             txt.text = "";
         }
-        foreach (Text txt in Team2PlayerNamesList)
-        {
+        foreach(Text txt in Team2PlayerNamesList) {
             txt.text = "";
         }
     }
+
+
     //-------------------------------------------------------------------------
+    [Header("---------------")]
+    public static bool ChooseOnce = false;
+    [Header("---------------")]
+
     public Button PlayButton;
     public int MinNumberOfPlayers;
     public void ValidatePlayButton()
     {
-        //int count;
-        //if(NewNetworkMgr.inst.doMultiplayer) {
-        //    //if(opponentType == PlayerSpecies.AI)
-        //    //    count = PhotonNetwork.CurrentRoom.PlayerCount + 1;
-        //    //else
-        //    //    count = PhotonNetwork.CurrentRoom.PlayerCount;
-        //    //Debug.Log("ValidatePlayButton: NPlayers: " + count);
-
-        //    //if(count >= MinNumberOfPlayers && isRoomCreator)
-        //    //    PlayButton.interactable = true;
-        //} else {
+ 
         PlayButton.interactable = true;
-        //SpinnerPanel.GetComponentInChildren<Animation>().Stop();
         SpinnerPanel.gameObject.SetActive(false);
-        //}
-        Debug.Log("Creating Game");
+        WaitingForPlayersText.text = PlayerName + " found teammate: " + teammateName;
+        //
     }
 
 
-    public void OnPlayButton()
+    public void OnStartButton()
     {
+        Debug.Log("Creating Game");
         State = LobbyState.Play;
-        //UnityEngine.SceneManagement.SceneManager.LoadScene(1); //GraphPrototype
         InstrumentMgr.isDebug = false;
-        //UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1); //Loads map number 1
-        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(2); //Loads mapNY1
-        //PhotonNetwork.LoadLevel(1);
-        //...
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1);
     }
 
 

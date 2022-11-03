@@ -55,6 +55,7 @@ public enum TaiserEventTypes
     MaliciousPacketFiltered_GoodForUs,
     MaliciousPacketUnfiltered_BadForUs,
     AdviseTaken,
+    AdviseFromHumanOrAI,
 }
 
 public class InstrumentMgr : MonoBehaviour
@@ -74,8 +75,7 @@ public class InstrumentMgr : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (UnityEngine.InputSystem.Keyboard.current.homeKey.wasReleasedThisFrame)
-        {
+        if(UnityEngine.InputSystem.Keyboard.current.homeKey.wasReleasedThisFrame) {
             WriteSession();
         }
     }
@@ -84,13 +84,11 @@ public class InstrumentMgr : MonoBehaviour
 
     public void CreateOrFindTaiserFolder()
     {
-        try
-        {
+        try {
             TaiserFolder = System.IO.Path.Combine(Application.persistentDataPath);
             System.IO.Directory.CreateDirectory(TaiserFolder);
         }
-        catch (System.Exception e)
-        {
+        catch(System.Exception e) {
             Debug.Log("Cannot create Taiser Directory: " + e.ToString());
         }
 
@@ -136,20 +134,16 @@ public class InstrumentMgr : MonoBehaviour
         form.AddField("file", "file");
         form.AddBinaryData("file", levelData, fileName, "text/csv");
         Debug.Log("Binary data added");
-        WWW w = new WWW("https://www.cse.unr.edu/~sushil/taiser/DataLoad.php", form);
+        WWW w = new WWW("https://www.cse.unr.edu/~crystala/taiser/test/data/dataUploader.php", form);
         yield return w;
 
-        if (w.error != null)
-        {
+        if(w.error != null) {
             Debug.Log("Error: " + w.error);
             Debug.Log(w.text);
-        }
-        else
-        {
+        } else {
             Debug.Log("No errors");
             Debug.Log(w.text);
-            if (w.uploadProgress == 1 || w.isDone)
-            {
+            if(w.uploadProgress == 1 || w.isDone) {
                 yield return new WaitForSeconds(5);
                 Debug.Log("Waited five seconds");
             }
@@ -163,24 +157,23 @@ public class InstrumentMgr : MonoBehaviour
         session.whitehatScore = NewGameMgr.inst.WhitehatScore * 100f; // BlackhatAI.inst.wscore;
         session.blackhatScore = NewGameMgr.inst.BlackhatScore * 100f; // BlackhatAI.inst.bscore;
         session.dayAndTime = System.DateTime.Now.ToUniversalTime().ToString();
-        session.gameDifficulty = NewGameMgr.inst.difficulty;
+        //session.gameDifficulty = NewGameMgr.inst.difficulty;
         string tmp = System.DateTime.Now.ToLocalTime().ToString();
-        session.name = (isDebug ? "sjl" : NewLobbyMgr.thisPlayer.name + "_" +
+        session.name = (isDebug ? "sjl" : NewLobbyMgr.thisPlayer.name + "_" + 
             session.dayAndTime.Replace('/', '_').Replace(" ", "_").Replace(":", "_"));
         session.role = PlayerRoles.Whitehat;
         session.teammateSpecies = NewLobbyMgr.teammateSpecies;
 
 
 
-        using (StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserFolder, session.name + ".csv"), FileMode.Create), Encoding.UTF8))
-        {
+        using(StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserFolder, session.name+".csv"), FileMode.Create), Encoding.UTF8)) {
             WriteHeader(sw);
             WriteRecords(sw);
         }
 
         StartCoroutine("WriteToServer");
     }
-
+    
     public void WriteHeader(StreamWriter sw)
     {
         sw.WriteLine(MakeHeaderString());
@@ -190,15 +183,15 @@ public class InstrumentMgr : MonoBehaviour
     public string MakeHeaderString()
     {
         string header = "";
-        header += session.name + ", " + session.role + ", " + session.dayAndTime + eoln;
+        header += session.name + ", " + session.role + ", "  +  session.dayAndTime + eoln;
         header += "Teammate Species: ," + session.teammateSpecies + eoln;
-        header += "Game Difficulty: ," + session.gameDifficulty + eoln;
+        //header += "Game Difficulty: ," + session.gameDifficulty + eoln;
         header += "Whitehat Score, " + session.whitehatScore.ToString("00.0") +
             ", Blackhat Score, " + session.blackhatScore.ToString("00.0") + eoln;
         header += "Time, Event, Modifiers" + eoln;
         return header;
     }
-
+    
     public void WriteRecords(StreamWriter sw)
     {
         sw.WriteLine(MakeRecords());
@@ -207,8 +200,7 @@ public class InstrumentMgr : MonoBehaviour
     public string MakeRecords()
     {
         string lines = "";
-        foreach (TaiserRecord tr in session.records)
-        {
+        foreach(TaiserRecord tr in session.records) {
             string mods = CSVString(tr.eventModifiers);
             lines += tr.secondsFromStart.ToString("0000.0") + ", " + tr.eventName + mods + eoln;
         }
@@ -219,8 +211,7 @@ public class InstrumentMgr : MonoBehaviour
     public string CSVString(List<string> mods)
     {
         string modifiers = "";
-        foreach (string mod in mods)
-        {
+        foreach(string mod in mods) {
             modifiers += ", " + mod;
         }
         return modifiers;

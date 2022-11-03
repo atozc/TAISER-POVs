@@ -67,8 +67,8 @@ public class TPacket : MonoBehaviour
         transform.localPosition = Vector3.zero;
         SetColor(color);
         SetSize(size);
-    }
-
+}
+    
     public void SetSize(PacketSize size)
     {
         ShapeRef.transform.localScale = NewGameMgr.inst.SizesVector[size];//!This depends on enum type mapping to int
@@ -95,12 +95,11 @@ public class TPacket : MonoBehaviour
         float y = 0; //do not change your height
         NextHeadings.Clear();
         NextHeadings.Add(GetNextRoundedDiff(path.source.transform.position, path.waypoints[0].transform.position, y));
-        for (int i = 0; i < path.waypoints.Count - 1; i++)
-        {
-            NextHeadings.Add(GetNextRoundedDiff(path.waypoints[i].transform.position,
+        for(int i = 0; i < path.waypoints.Count - 1; i++) {
+            NextHeadings.Add(GetNextRoundedDiff(path.waypoints[i].transform.position, 
                 path.waypoints[i + 1].transform.position, y));
         }
-        NextHeadings.Add(GetNextRoundedDiff(path.waypoints[path.waypoints.Count - 1].transform.position,
+        NextHeadings.Add(GetNextRoundedDiff(path.waypoints[path.waypoints.Count - 1].transform.position, 
             path.destination.transform.position, y));
         NextIndex = 0;
 
@@ -121,20 +120,19 @@ public class TPacket : MonoBehaviour
     /// </summary>
     public void MoveTo()
     {
-        transform.position += speed * normalizedHeading * Time.deltaTime;
+        transform.position += speed * normalizedHeading * Time.deltaTime * Time.timeScale;
     }
 
     public List<Vector3> NextHeadings = new List<Vector3>();
     public int NextIndex = 0;
     public void SetNextVelocityOnPath()
     {
-        if (NextIndex < NextHeadings.Count)
-        {
+        if(NextIndex < NextHeadings.Count) {
             normalizedHeading = NextHeadings[NextIndex++];
             // set rotations only when vel changes
-            if (normalizedHeading.x != 0)//orients correctly by being multiplied by normalizedHeading which is +1 or -1
+            if(normalizedHeading.x != 0)//orients correctly by being multiplied by normalizedHeading which is +1 or -1
                 transform.localEulerAngles = NewGameMgr.inst.XOrientation;
-            if (normalizedHeading.z != 0)
+            if(normalizedHeading.z != 0)
                 transform.localEulerAngles = NewGameMgr.inst.ZOrientation;
         }
     }

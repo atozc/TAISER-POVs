@@ -27,7 +27,7 @@ public class PacketFilterUIOnCollision : MonoBehaviour
         if (collision.gameObject.name == "PlayerArmature" && transform.gameObject.name == "MaliciousCube")
         {
             // Display UI
-            NewGameMgr.inst.OnAttackableDestinationClicked(destination);
+            RuleSpecButtonMgr.inst.OnAttackableDestinationClicked(destination);
         }
         else
         {

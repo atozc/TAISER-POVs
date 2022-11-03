@@ -26,14 +26,14 @@ public class TDestination : MonoBehaviour
         maliciousCube.transform.localScale = originalCubeScale;
         isBeingExamined = false;
         isFilterValid = false;
-        dt = timeInterval;
+        dt = minTimeInterval;
         destinationState = DestinationStates.Idle;
     }
 
     public void StartWave()
     {
         destinationState = DestinationStates.Up;
-        dt = timeInterval;
+        dt = minTimeInterval;
         MaliciousRule = BlackhatAI.inst.CreateMaliciousPacketRuleForDestination(this);
         isBeingExamined = false;
         isFilterValid = false;// ?
@@ -57,8 +57,8 @@ public class TDestination : MonoBehaviour
     public LightWeightPacket MaliciousRule;
     public float dt = 0;
     public int initTime = 20;
-    public int timeInterval = 17; //For mal rule change, set this in editor to tune game, every 25 seconds change rule
-    public int timeSpread = 5;
+    public int minTimeInterval = 12; //For mal rule change, set this in editor to tune game, every 25 seconds change rule
+    public int maxTimeInterval = 22;
     public bool isBeingExamined = false;
 
     public DestinationStates destinationState = DestinationStates.Idle;
@@ -66,21 +66,16 @@ public class TDestination : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (destinationState == DestinationStates.Up)
-        {
-            if (dt <= 0)
-            {
+        if(destinationState == DestinationStates.Up) {
+            if(dt <= 0) {
                 dt = GenerateTimeInterval();
                 MaliciousRule = BlackhatAI.inst.CreateMaliciousPacketRuleForDestination(this);
-                if (NewGameMgr.inst.State == NewGameMgr.GameState.PacketExamining && isBeingExamined)
-                {// This needs to be tested (5/25/2022)
+                if(NewGameMgr.inst.State == NewGameMgr.GameState.PacketExamining && isBeingExamined) {// This needs to be tested (5/25/2022)
                     PacketButtonMgr.inst.ResetHighlightColor();
                     //Debug.Log(inGameName + ": Resetting highlight colors");
                 }
                 //Debug.Log(gameName + " dest, created new Mal rule: " + MaliciousRule.ToString());
-            }
-            else
-            {
+            } else {
                 dt -= Time.deltaTime;
             }
         }
@@ -88,7 +83,7 @@ public class TDestination : MonoBehaviour
 
     float GenerateTimeInterval()
     {
-        return (float)NewGameMgr.inst.TRandom.Next(timeInterval - timeSpread, timeInterval + timeSpread);
+        return (float) NewGameMgr.inst.TRandom.Next(minTimeInterval, maxTimeInterval);
     }
 
     public int myId;
@@ -98,17 +93,13 @@ public class TDestination : MonoBehaviour
     {
         //Debug.Log("TDestination Collided with " + collision.gameObject.name);
         TPacket tPack = collision.transform.parent.gameObject.GetComponent<TPacket>();
-        if (null != tPack)
-        {
+        if(null != tPack) {
             packetCount += 1;
             //if packet is not malicious
             //Debug.Log("Collided packet: " + tPack.packet.ToString() + ", isMalicious: " + tPack.packet.isMalicious);
-            if (!tPack.packet.isMalicious)
-            {
+            if(!tPack.packet.isMalicious) {
                 TLogPacket(tPack);
-            }
-            else if (tPack.packet.isMalicious && !isPacketFiltered(tPack))
-            {
+            } else if (tPack.packet.isMalicious && !isPacketFiltered(tPack)) {
                 maliciousCount += 1;
                 maliciousUnfilteredCount += 1;
                 GrowCube();
@@ -117,9 +108,7 @@ public class TDestination : MonoBehaviour
                 InstrumentMgr.inst.AddRecord(TaiserEventTypes.MaliciousPacketUnfiltered_BadForUs.ToString(), inGameName);
                 //NewAudioMgr.inst.source.PlayOneShot(NewAudioMgr.inst.maliciousUnfiltered);
 
-            }
-            else if (tPack.packet.isMalicious && isPacketFiltered(tPack))
-            {
+            } else if (tPack.packet.isMalicious && isPacketFiltered(tPack)) {
                 maliciousCount += 1;
                 maliciousFilteredCount += 1;
                 ShrinkCube();
@@ -138,13 +127,13 @@ public class TDestination : MonoBehaviour
     public Vector3 originalCubeScale;
     public void GrowCube()
     {
-        if (maliciousCube?.transform.localScale.y < maxCubeScale.y)
+        if(maliciousCube?.transform.localScale.y < maxCubeScale.y)
             maliciousCube.transform.localScale += scaleCubeDelta;
     }
     public void ShrinkCube()
     {
         Vector3 newScale = maliciousCube.transform.localScale - scaleCubeDelta;
-        if (maliciousCube?.transform.localScale.y > originalCubeScale.y && newScale.y > 0.1)
+        if(maliciousCube?.transform.localScale.y > originalCubeScale.y && newScale.y > 0.1)
             maliciousCube.transform.localScale -= scaleCubeDelta;
     }
     public void ResetMaliciousCube(LightWeightPacket lwp)
@@ -163,7 +152,7 @@ public class TDestination : MonoBehaviour
     }
     void AddFIFOSizeLimitedQueue(List<LightWeightPacket> packetList, LightWeightPacket packet, int limit)
     {
-        if (packetList.Count >= limit)
+        if(packetList.Count >= limit)
             packetList.RemoveAt(0);
         packetList.Add(packet);
     }

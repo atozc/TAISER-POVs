@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -14,12 +12,12 @@ public class OnSelectCube : MonoBehaviour, IPointerClickHandler
     // Update is called once per frame
     void Update()
     {
-
+        
     }
     public TDestination destination;
     public void OnPointerClick(PointerEventData eventData)
     {
-        NewGameMgr.inst.OnAttackableDestinationClicked(destination);
+        RuleSpecButtonMgr.inst.OnAttackableDestinationClicked(destination);
     }
-
+   
 }
