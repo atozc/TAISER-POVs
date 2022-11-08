@@ -20,8 +20,7 @@ public class NewAudioMgr : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (UnityEngine.InputSystem.Keyboard.current.endKey.wasReleasedThisFrame)
-        {
+        if(UnityEngine.InputSystem.Keyboard.current.endKey.wasReleasedThisFrame) {
             source.PlayOneShot(testClip, testScale);
         }
     }
@@ -35,6 +34,8 @@ public class NewAudioMgr : MonoBehaviour
     public AudioClip BadFilterRule;
     public AudioClip GoodFilterRule;
 
+    public AudioClip PenaltyBoing;
+
     public AudioClip Countdown;
     public AudioClip Winning;
     public AudioClip Losing;
@@ -46,7 +47,7 @@ public class NewAudioMgr : MonoBehaviour
     {
         source.PlayOneShot(clip, vScale);
     }
-
+    
     void PlayAmbient()
     {
         //ambient.PlayDelayed(10f);

@@ -11,9 +11,9 @@ public class BlackhatAI : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        
     }
-
+ 
     // Update is called once per frame
     void Update()
     {
@@ -23,9 +23,9 @@ public class BlackhatAI : MonoBehaviour
     public LightWeightPacket CreateRandomRuleForDestination(TDestination destination)
     {
         LightWeightPacket lwp = new LightWeightPacket();
-        lwp.shape = (PacketShape)NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketShapes.Count);
-        lwp.color = (PacketColor)NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketColors.Count);
-        lwp.size = (PacketSize)NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketSizes.Count);
+        lwp.shape = (PacketShape) NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketShapes.Count);
+        lwp.color = (PacketColor) NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketColors.Count);
+        lwp.size =  (PacketSize) NewGameMgr.inst.TRandom.Next(0, NewGameMgr.inst.PacketSizes.Count);
         lwp.destination = null;
         return lwp;
     }
@@ -33,7 +33,7 @@ public class BlackhatAI : MonoBehaviour
     public LightWeightPacket CreateNonMaliciousPacketRuleForDestination(TDestination destination) //SetCurrentPacketRule()
     {
         LightWeightPacket lwp = CreateRandomRuleForDestination(destination);
-        while (lwp.isEqual(destination.MaliciousRule)) lwp = CreateRandomRuleForDestination(destination); //any packet except the malicious packet
+        while(lwp.isEqual(destination.MaliciousRule)) lwp = CreateRandomRuleForDestination(destination); //any packet except the malicious packet
         return lwp;
     }
 
@@ -49,3 +49,4 @@ public class BlackhatAI : MonoBehaviour
     }
 
 }
+

@@ -32,10 +32,8 @@ public class SpeciesDropdownHandler : MonoBehaviour
     public void OnValueChanged(int index)
     {
 
-        if (shouldTrigger)
-        {
-            switch (dropdown.options[index].text.Trim())
-            {
+        if(shouldTrigger) {
+            switch(dropdown.options[index].text.Trim()) {
                 case "Human":
                     species = PlayerSpecies.Human;
                     break;
@@ -67,4 +65,3 @@ public class SpeciesDropdownHandler : MonoBehaviour
 
 
 }
-

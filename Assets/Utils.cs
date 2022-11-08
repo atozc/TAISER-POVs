@@ -19,7 +19,7 @@ public class Utils : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        
     }
 
     // Update is called once per frame
@@ -28,7 +28,7 @@ public class Utils : MonoBehaviour
 
     }
 
-    IEnumerator FileWriter;
+    IEnumerator FileWriter; 
 
     public void WriteFileToServer(string filename, string content)
     {
@@ -49,22 +49,19 @@ public class Utils : MonoBehaviour
         form.AddField("file", "file");
         form.AddBinaryData("file", data, filename, "text/csv");
         Debug.Log("Data added");
-        WWW w = new WWW("https://www.cse.unr.edu/~crystala/taiser/test/data/newDataUploader.php", form);
+        WWW w = new WWW("https://www.cse.unr.edu/~crystala/taiser/test/data/newDataloadUploader.php", form);
         yield return w;
 
-        if (w.error != null)
-        {
+        if(w.error != null) {
             Debug.Log("Error: " + w.error);
             Debug.Log(w.text);
-        }
-        else
-        {
+            NewLobbyMgr.inst.OnError();
+        } else {
             Debug.Log("No errors");
             //Debug.Log(w.text);
-            if (w.uploadProgress == 1 || w.isDone)
-            {
-                yield return new WaitForSeconds(5);
-                Debug.Log("Waited five seconds");
+            if(w.uploadProgress == 1 || w.isDone) {
+                yield return new WaitForSeconds(10);
+                Debug.Log("Waited ten seconds");
             }
         }
     }
@@ -80,15 +77,12 @@ public class Utils : MonoBehaviour
 
     IEnumerator ReadFromServer(string filename)
     {
-        UnityWebRequest www = UnityWebRequest.Get("https://www.cse.unr.edu/~crystala/taiser/test/data/newParameters.csv" + filename);
+        UnityWebRequest www = UnityWebRequest.Get("https://www.cse.unr.edu/~crystala/taiser/test/data" + filename);
         yield return www.SendWebRequest();
 
-        if (www.result != UnityWebRequest.Result.Success)
-        {
+        if(www.result != UnityWebRequest.Result.Success) {
             Debug.Log(www.error);
-        }
-        else
-        {
+        } else {
             FileContent = www.downloadHandler.text;
         }
     }

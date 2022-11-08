@@ -141,7 +141,7 @@ public class NewGameMgr : MonoBehaviour
 
     public void ReadGameParametersFromServer()
     {
-        string content = Utils.inst.ReadFileFromServer("Parameters.csv");
+        string content = Utils.inst.ReadFileFromServer("newParameters.csv");
         StartCoroutine("WaitAndExtractParamsFromString");
     }
 

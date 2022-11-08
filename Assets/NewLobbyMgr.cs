@@ -41,6 +41,7 @@ public class NewLobbyMgr : MonoBehaviour
         StartOrQuit = 0,
         EnterAlias,
         Admin,            // if Alias is Administrator
+        Error,            // if error on submit() on admin panel
         CreateOrJoin,
         MissionObjective,
         ChooseDifficulty,
@@ -58,6 +59,7 @@ public class NewLobbyMgr : MonoBehaviour
             _state = value;
             StartPanel.isVisible = (_state == LobbyState.StartOrQuit);
             AdminPanel.isVisible = (_state == LobbyState.Admin);
+            ErrorPanel.isVisible = (_state == LobbyState.Error);
             EnterAliasPanel.isVisible = (_state == LobbyState.EnterAlias);
             CreateOrJoinGamePanel.isVisible = (_state == LobbyState.CreateOrJoin);
             WaitingForPlayersPanel.isVisible = (_state == LobbyState.WaitingForPlayers);
@@ -66,6 +68,7 @@ public class NewLobbyMgr : MonoBehaviour
         }
     }
     public TaiserPanel AdminPanel;
+    public TaiserPanel ErrorPanel;
     public TaiserPanel StartPanel;
     public TaiserPanel EnterAliasPanel;
     public TaiserPanel CreateOrJoinGamePanel;
@@ -90,6 +93,17 @@ public class NewLobbyMgr : MonoBehaviour
     public void OnNextButton()
     {
         State = LobbyState.MissionObjective;
+    }
+
+    public void OnRestartButton()
+    {
+        //Load game w/ default values
+        State = LobbyState.Play;
+    }
+
+    public void OnError()
+    {
+        State = LobbyState.Error;
     }
 
     public void OnQuitButton()
@@ -124,7 +138,7 @@ public class NewLobbyMgr : MonoBehaviour
     public PlayerSpecies PlrSpecies;
 
     //-----------------------------------------------------------
-    public static string PlayerName = "sjl";
+    public static string PlayerName = "caa";
     public string PlayerNameForDebug;
     public static TaiserPlayer thisPlayer;
     public static Difficulty gameDifficulty;
@@ -510,7 +524,7 @@ public class NewLobbyMgr : MonoBehaviour
         Debug.Log("Creating Game");
         State = LobbyState.Play;
         InstrumentMgr.isDebug = false;
-        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(1);
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(3);
     }
 
 

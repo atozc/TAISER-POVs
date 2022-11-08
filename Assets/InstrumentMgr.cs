@@ -134,7 +134,7 @@ public class InstrumentMgr : MonoBehaviour
         form.AddField("file", "file");
         form.AddBinaryData("file", levelData, fileName, "text/csv");
         Debug.Log("Binary data added");
-        WWW w = new WWW("https://www.cse.unr.edu/~crystala/taiser/test/data/dataUploader.php", form);
+        WWW w = new WWW("https://www.cse.unr.edu/~crystala/taiser/test/data/newDataloadUploader.php", form);
         yield return w;
 
         if(w.error != null) {
@@ -144,8 +144,8 @@ public class InstrumentMgr : MonoBehaviour
             Debug.Log("No errors");
             Debug.Log(w.text);
             if(w.uploadProgress == 1 || w.isDone) {
-                yield return new WaitForSeconds(5);
-                Debug.Log("Waited five seconds");
+                yield return new WaitForSeconds(10);
+                Debug.Log("Waited ten seconds");
             }
         }
     }
@@ -159,7 +159,7 @@ public class InstrumentMgr : MonoBehaviour
         session.dayAndTime = System.DateTime.Now.ToUniversalTime().ToString();
         //session.gameDifficulty = NewGameMgr.inst.difficulty;
         string tmp = System.DateTime.Now.ToLocalTime().ToString();
-        session.name = (isDebug ? "sjl" : NewLobbyMgr.thisPlayer.name + "_" + 
+        session.name = (isDebug ? "caa" : NewLobbyMgr.thisPlayer.name + "_" + 
             session.dayAndTime.Replace('/', '_').Replace(" ", "_").Replace(":", "_"));
         session.role = PlayerRoles.Whitehat;
         session.teammateSpecies = NewLobbyMgr.teammateSpecies;

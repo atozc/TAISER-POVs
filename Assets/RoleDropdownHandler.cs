@@ -24,16 +24,14 @@ public class RoleDropdownHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
     public void OnValueChanged(int index)
     {
 
-        if (shouldTrigger)
-        {
-            switch (dropdown.options[index].text.Trim())
-            {
+        if(shouldTrigger) {
+            switch(dropdown.options[index].text.Trim()) {
                 case "Whitehat":
                     role = PlayerRoles.Whitehat;
                     break;
