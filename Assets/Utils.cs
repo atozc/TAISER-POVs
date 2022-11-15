@@ -82,6 +82,7 @@ public class Utils : MonoBehaviour
 
         if(www.result != UnityWebRequest.Result.Success) {
             Debug.Log(www.error);
+            //NewLobbyMgr.inst.OnError();
         } else {
             FileContent = www.downloadHandler.text;
         }

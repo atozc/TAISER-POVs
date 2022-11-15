@@ -98,7 +98,7 @@ public class NewLobbyMgr : MonoBehaviour
     public void OnRestartButton()
     {
         //Load game w/ default values
-        State = LobbyState.Play;
+        State = LobbyState.StartOrQuit;
     }
 
     public void OnError()
@@ -114,6 +114,11 @@ public class NewLobbyMgr : MonoBehaviour
     public void OnBackButton()
     {
         State = PriorStateMap[State];
+    }
+
+    public void OnDropIn()
+    {
+        State = LobbyState.StartOrQuit;
     }
     public Dictionary<LobbyState, LobbyState> PriorStateMap = new Dictionary<LobbyState, LobbyState>();
     public void SetPriorStateMap()
