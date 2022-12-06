@@ -166,7 +166,7 @@ public class InstrumentMgr : MonoBehaviour
 
 
 
-        using(StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserFolder, session.name+".csv"), FileMode.Create), Encoding.UTF8)) {
+        using(StreamWriter sw = new StreamWriter(File.Open(System.IO.Path.Combine(TaiserFolder, session.name+".csv"), FileMode.Create), Encoding.UTF8)) {
             WriteHeader(sw);
             WriteRecords(sw);
         }

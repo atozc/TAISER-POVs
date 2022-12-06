@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using System;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -130,7 +131,7 @@ public class AdminWriteFile : MonoBehaviour
     session.dayandTime = System.DateTime.Now.ToUniversalTime().ToString();
         string tmp = System.DateTime.Now.ToLocalTime().ToString();
 
-        using (StreamWriter sw = new StreamWriter(File.Open(Path.Combine(TaiserAdminFolder, "parameters.csv"), FileMode.Create), Encoding.UTF8))
+        using (StreamWriter sw = new StreamWriter(File.Open(System.IO.Path.Combine(TaiserAdminFolder, "parameters.csv"), FileMode.Create), Encoding.UTF8))
         {
             WriteHeader(sw);
             WriteRecords(sw);
